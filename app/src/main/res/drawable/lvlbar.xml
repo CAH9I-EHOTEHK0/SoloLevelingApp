@@ -1,0 +1,33 @@
+<!--
+  ~ Copyright (C) 2026 The Android Open Source Project
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~      http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="316dp"
+    android:height="62dp"
+    android:viewportWidth="316"
+    android:viewportHeight="62">
+  <path
+      android:pathData="M54.17,40.83L47.5,47.5L280.83,47.36L307.5,30.83L280.83,14.17H47.5L54.17,20.83H80.83H104.83H128.83H152.83H176.83H200.83H224.83H248.83H272.83H280.83L297.5,30.83L280.83,40.83H267.5H243.5H219.5H195.5H171.5H147.5H123.5H99.5H75.5H54.17Z"
+      android:fillColor="#00E6F0"/>
+  <path
+      android:pathData="M20.83,54.17H40.83L47.5,47.5L54.17,40.83V20.83L47.5,14.17L40.83,7.5H30.83H20.83L7.5,20.83V40.83L20.83,54.17ZM47.5,40.83L40.83,47.5H20.83L14.17,40.83V20.83L20.83,14.17H40.83L47.5,20.83V40.83Z"
+      android:fillColor="#00E6F0"
+      android:fillType="evenOdd"/>
+  <path
+      android:strokeWidth="1"
+      android:pathData="M54.17,40.83V20.83M54.17,40.83L47.5,47.5M54.17,40.83H99.5M54.17,40.83H75.5M54.17,20.83L47.5,14.17M54.17,20.83H80.83M47.5,47.5L40.83,54.17H20.83L7.5,40.83V20.83L20.83,7.5H30.83H40.83L47.5,14.17M47.5,47.5L280.83,47.36L307.5,30.83L280.83,14.17H47.5M99.5,40.83H280.83L297.5,30.83L280.83,20.83H272.83M280.83,40.83H267.5M280.83,20.83H104.83M75.5,40.83L80.83,20.83M75.5,40.83H99.5M80.83,20.83H104.83M99.5,40.83L104.83,20.83M99.5,40.83H123.5M104.83,20.83H128.83M123.5,40.83L128.83,20.83M123.5,40.83H147.5M128.83,20.83H152.83M147.5,40.83L152.83,20.83M147.5,40.83H171.5M152.83,20.83H176.83M171.5,40.83L176.83,20.83M171.5,40.83H195.5M176.83,20.83H200.83M195.5,40.83L200.83,20.83M195.5,40.83H219.5M200.83,20.83H224.83M219.5,40.83L224.83,20.83M219.5,40.83H243.5M224.83,20.83H248.83M243.5,40.83L248.83,20.83M243.5,40.83H267.5M248.83,20.83H272.83M267.5,40.83L272.83,20.83M40.83,47.5L47.5,40.83V20.83L40.83,14.17H20.83L14.17,20.83V40.83L20.83,47.5H40.83Z"
+      android:fillColor="#00000000"
+      android:strokeColor="#B0E0E6"/>
+</vector>
