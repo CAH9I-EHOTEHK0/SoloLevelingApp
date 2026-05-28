@@ -8,6 +8,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
@@ -18,7 +19,14 @@ fun AchievementsScreen() {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF0B0813)),
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        Color(0xFF141C2B),
+                        Color(0xFF120A1F),
+                    )
+                )
+            ), // Градієнтний фон
         contentAlignment = Alignment.Center
     ) {
         // Наш кастомний анімований фон з паралелепіпедами
