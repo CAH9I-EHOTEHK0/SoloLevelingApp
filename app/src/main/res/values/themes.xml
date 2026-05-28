@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.SoloLevelingApp" parent="android:Theme.Material.Light.NoActionBar">
+        <!-- Робимо статус-бар прозорим -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <!-- Робимо навігаційний бар прозорим -->
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+
+        <!-- Відключаємо системні ліміти для малювання "під" барами -->
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+
+        <!-- Якщо ви тестуєте на старих Android 8-9 (API 27-28), ці властивості теж знімуть рамки -->
+        <item name="android:windowTranslucentNavigation">false</item>
+        <item name="android:windowTranslucentStatus">false</item>
+    </style>
+</resources>
