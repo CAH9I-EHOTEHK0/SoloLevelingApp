@@ -35,6 +35,7 @@ private fun closeApp(context: android.content.Context) {
 @Composable
 fun HomeScreen() {
     val context = LocalContext.current
+    var isProfileOpen by remember { mutableStateOf(false) }
     fun showMessage() {
         Toast.makeText(context, "Поки що повідомлення", Toast.LENGTH_SHORT).show()
     }
@@ -103,7 +104,9 @@ fun HomeScreen() {
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null
-                        ) { showMessage() },
+                        ) {
+                            isProfileOpen = true // Відкриваємо оверлей при кліку!
+                        },
                     contentAlignment = Alignment.Center
                 ) {
                     Image(
@@ -128,6 +131,12 @@ fun HomeScreen() {
                         contentDescription = null,
                         modifier = Modifier.size(btnSize),
                         contentScale = ContentScale.FillBounds
+                    )
+                }
+
+                if (isProfileOpen) {
+                    ProfileOverlay(
+                        onDismiss = { isProfileOpen = false } // Закриваємо при натисканні назад або на кнопку
                     )
                 }
             }
