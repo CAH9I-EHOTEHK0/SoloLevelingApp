@@ -136,7 +136,11 @@ fun HomeScreen() {
 
                 if (isProfileOpen) {
                     ProfileOverlay(
-                        onDismiss = { isProfileOpen = false } // Закриваємо при натисканні назад або на кнопку
+                        onDismiss = { isProfileOpen = false }, // Закриваємо при натисканні назад або на кнопку
+                        onQuestSettingsClick = {
+                            // TODO: Сюди потім пропишеш відкриття іншого оверлея,
+                            // наприклад: isQuestSettingsOpen = true
+                        }
                     )
                 }
             }

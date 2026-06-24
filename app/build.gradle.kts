@@ -64,4 +64,5 @@ dependencies {
     ksp("androidx.room:room-compiler:2.8.4")
     implementation("com.google.dagger:hilt-android:2.51")
     ksp("com.google.dagger:hilt-compiler:2.51")
+    implementation("androidx.compose.material:material-icons-extended")
 }
