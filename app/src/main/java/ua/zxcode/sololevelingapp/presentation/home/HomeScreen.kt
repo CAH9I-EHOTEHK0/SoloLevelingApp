@@ -7,9 +7,15 @@ import android.os.Build
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,11 +28,15 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ua.zxcode.sololevelingapp.R
+import ua.zxcode.sololevelingapp.data.local.db.AppDatabase
+import ua.zxcode.sololevelingapp.data.repository.impl.QuestRepositoryImpl
 import ua.zxcode.sololevelingapp.presentation.components.SoloLevelingBackground
+import kotlinx.coroutines.launch
 
 private fun closeApp(context: android.content.Context) {
     (context as? Activity)?.finishAffinity()
@@ -35,7 +45,15 @@ private fun closeApp(context: android.content.Context) {
 @Composable
 fun HomeScreen() {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val questRepository = remember(context) {
+        QuestRepositoryImpl(AppDatabase.getInstance(context).questDao())
+    }
+    val activeQuests by questRepository.observeActiveQuests().collectAsState(initial = emptyList())
+
     var isProfileOpen by remember { mutableStateOf(false) }
+    var isQuestSettingsOpen by remember { mutableStateOf(false) }
+
     fun showMessage() {
         Toast.makeText(context, "Поки що повідомлення", Toast.LENGTH_SHORT).show()
     }
@@ -138,9 +156,15 @@ fun HomeScreen() {
                     ProfileOverlay(
                         onDismiss = { isProfileOpen = false }, // Закриваємо при натисканні назад або на кнопку
                         onQuestSettingsClick = {
-                            // TODO: Сюди потім пропишеш відкриття іншого оверлея,
-                            // наприклад: isQuestSettingsOpen = true
+                            isProfileOpen = false
+                            isQuestSettingsOpen = true
                         }
+                    )
+                }
+
+                if (isQuestSettingsOpen) {
+                    QuestSettingsOverlay(
+                        onDismiss = { isQuestSettingsOpen = false }
                     )
                 }
             }
@@ -219,15 +243,53 @@ fun HomeScreen() {
                 }
 
                 // 4. МІСЦЕ ДЛЯ ТВОЇХ КВЕСТІВ (Push-ups, Book, Code)
-                Column(
+                LazyColumn(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f) // Займає весь вільний простір між лінією та варнінгом
-                        .padding(vertical = 20.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                        .padding(vertical = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    // ТУТ БУДУТЬ САМІ КВЕСТИ
-                    // Сюди потім вставиш свій рядки з іконками, назвами [45/45] та чекбоксами
+                    items(activeQuests) { quest ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(Color(0xFF161622).copy(alpha = 0.6f), RoundedCornerShape(8.dp))
+                                .border(1.dp, Color(0xFFB0E0E6).copy(alpha = 0.2f), RoundedCornerShape(8.dp))
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = quest.title,
+                                    color = Color.White,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                                Text(
+                                    text = "+${quest.expReward} EXP",
+                                    color = Color(0xFF00E6F0),
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                            
+                            Checkbox(
+                                checked = quest.isCompleted,
+                                onCheckedChange = { checked ->
+                                    coroutineScope.launch {
+                                        questRepository.setQuestCompleted(quest.id, checked)
+                                    }
+                                },
+                                colors = CheckboxDefaults.colors(
+                                    checkedColor = Color(0xFF00FF66),
+                                    uncheckedColor = Color(0xFFB0E0E6),
+                                    checkmarkColor = Color.Black
+                                )
+                            )
+                        }
+                    }
                 }
 
 
