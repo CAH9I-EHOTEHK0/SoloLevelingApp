@@ -10,5 +10,8 @@ data class UserEntity(
     val nickname: String,
     val currentLevel: Int,
     val currentXp: Int,
-    val xpToNextLevel: Int
+    val xpToNextLevel: Int,
+    val gender: String = "Male",
+    val birthDate: String = "12.05.2004",
+    val isSoundEnabled: Boolean = true
 )

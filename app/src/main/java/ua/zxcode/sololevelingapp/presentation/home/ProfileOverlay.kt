@@ -19,49 +19,123 @@ import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.Text
-import androidx.compose.runtime.*
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.launch
+import ua.zxcode.sololevelingapp.data.local.db.AppDatabase
+import ua.zxcode.sololevelingapp.data.local.entity.UserEntity
+import ua.zxcode.sololevelingapp.data.repository.impl.UserRepositoryImpl
+
 @Composable
 fun ProfileOverlay(
-    onDismiss: () -> Unit, // Функція, яка закриє оверлей
-    onQuestSettingsClick: () -> Unit // <--- Додаємо сюди функцію для відкриття налаштувань квестів
+    onDismiss: () -> Unit,
+    onQuestSettingsClick: () -> Unit
 ) {
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val userRepository = remember(context) {
+        UserRepositoryImpl(AppDatabase.getInstance(context).userDao())
+    }
+    
+    val userState by userRepository.observeUser().collectAsState(initial = null)
+
     var username by remember { mutableStateOf("Сон Джин Ву") }
     var isEditing by remember { mutableStateOf(false) }
     var textInput by remember { mutableStateOf(username) }
 
     var selectedGender by remember { mutableStateOf("Male") }
+    var birthDate by remember { mutableStateOf("12.05.2004") }
+    var isSoundEnabled by remember { mutableStateOf(true) }
 
-    var isSoundEnabled by remember { mutableStateOf(true) } // true = Увімк, false = Вимк
+    // Sync with database
+    LaunchedEffect(userState) {
+        userState?.let {
+            username = it.nickname
+            selectedGender = it.gender
+            birthDate = it.birthDate
+            isSoundEnabled = it.isSoundEnabled
+            textInput = it.nickname
+        }
+    }
 
-    // Замість Dialog використовуємо Popup, який не багує з координатами курсора
+    fun saveUserUpdate(
+        newNickname: String = username,
+        newGender: String = selectedGender,
+        newBirthDate: String = birthDate,
+        newSoundEnabled: Boolean = isSoundEnabled
+    ) {
+        coroutineScope.launch {
+            val currentUser = userRepository.getUser()
+            if (currentUser == null) {
+                userRepository.insertUser(
+                    UserEntity(
+                        id = 1,
+                        nickname = newNickname,
+                        currentLevel = 1,
+                        currentXp = 0,
+                        xpToNextLevel = 100,
+                        gender = newGender,
+                        birthDate = newBirthDate,
+                        isSoundEnabled = newSoundEnabled
+                    )
+                )
+            } else {
+                userRepository.updateUser(
+                    currentUser.copy(
+                        nickname = newNickname,
+                        gender = newGender,
+                        birthDate = newBirthDate,
+                        isSoundEnabled = newSoundEnabled
+                    )
+                )
+            }
+        }
+    }
+
+    var isEditingDate by remember { mutableStateOf(false) }
+
+    val days = remember { (1..31).map { it.toString().padStart(2, '0') } }
+    val months = remember { (1..12).map { it.toString().padStart(2, '0') } }
+    val years = remember { (1970..2026).map { it.toString() }.reversed() }
+
+    var selectedDayIndex by remember { mutableStateOf(days.indexOf(birthDate.split(".")[0]).coerceAtLeast(0)) }
+    var selectedMonthIndex by remember { mutableStateOf(months.indexOf(birthDate.split(".")[1]).coerceAtLeast(0)) }
+    var selectedYearIndex by remember { mutableStateOf(years.indexOf(birthDate.split(".")[2]).coerceAtLeast(0)) }
+
+    // Update wheel indexes when date changes from database
+    LaunchedEffect(birthDate) {
+        val parts = birthDate.split(".")
+        if (parts.size == 3) {
+            val dIdx = days.indexOf(parts[0])
+            if (dIdx >= 0) selectedDayIndex = dIdx
+            val mIdx = months.indexOf(parts[1])
+            if (mIdx >= 0) selectedMonthIndex = mIdx
+            val yIdx = years.indexOf(parts[2])
+            if (yIdx >= 0) selectedYearIndex = yIdx
+        }
+    }
+
     Popup(
         onDismissRequest = { onDismiss() },
         properties = PopupProperties(
-            focusable = true, // Щоб відкривалася клавіатура і працювало введення
+            focusable = true,
             excludeFromSystemGesture = true
         )
     ) {
-        // Задній темний фон на весь екран, щоб затінити все ззаду і зловити кліки для закриття
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Black.copy(alpha = 0.6f)),
             contentAlignment = Alignment.Center
         ) {
-            // Контент картки профілю
             Box(
                 modifier = Modifier
                     .fillMaxWidth(0.85f)
                     .wrapContentHeight()
-                    .imePadding() // Тепер відступ клавіатури працюватиме адекватно всередині Popup
+                    .imePadding()
                     .border(
                         width = 2.dp,
                         color = Color(0xFFB0E0E6),
@@ -142,6 +216,7 @@ fun ProfileOverlay(
                             IconButton(onClick = {
                                 if (textInput.isNotBlank()) {
                                     username = textInput
+                                    saveUserUpdate(newNickname = textInput)
                                 }
                                 isEditing = false
                             }) {
@@ -156,30 +231,12 @@ fun ProfileOverlay(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // --- СТАНІ ДЛЯ ДАТИ НАРОДЖЕННЯ (додай до інших remember на початку ProfileOverlay) ---
-                    var birthDate by remember { mutableStateOf("12.05.2004") }
-                    var isEditingDate by remember { mutableStateOf(false) }
-
-// Списки для барабанів
-                    val days = remember { (1..31).map { it.toString().padStart(2, '0') } }
-                    val months = remember { (1..12).map { it.toString().padStart(2, '0') } }
-                    val years = remember { (1970..2026).map { it.toString() }.reversed() } // Від нових до старих
-
-// Тимчасові індекси для вибору в барабанах
-                    var selectedDayIndex by remember { mutableStateOf(days.indexOf(birthDate.split(".")[0])) }
-                    var selectedMonthIndex by remember { mutableStateOf(months.indexOf(birthDate.split(".")[1])) }
-                    var selectedYearIndex by remember { mutableStateOf(years.indexOf(birthDate.split(".")[2])) }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-// --- РЯДОК ДАТИ НАРОДЖЕННЯ ---
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         if (!isEditingDate) {
-                            // Режим перегляду дати
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 modifier = Modifier.weight(1f)
@@ -191,7 +248,7 @@ fun ProfileOverlay(
                                 )
                                 Text(
                                     text = birthDate,
-                                    color = Color(0xFF00E6F0), // Твій фірмовий неон
+                                    color = Color(0xFF00E6F0),
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.Medium,
                                     modifier = Modifier.padding(start = 4.dp)
@@ -199,11 +256,12 @@ fun ProfileOverlay(
                             }
 
                             IconButton(onClick = {
-                                // Розпарсимо поточну дату, щоб барабани стали на правильні місця при відкритті
                                 val parts = birthDate.split(".")
-                                selectedDayIndex = days.indexOf(parts[0]).coerceAtLeast(0)
-                                selectedMonthIndex = months.indexOf(parts[1]).coerceAtLeast(0)
-                                selectedYearIndex = years.indexOf(parts[2]).coerceAtLeast(0)
+                                if (parts.size == 3) {
+                                    selectedDayIndex = days.indexOf(parts[0]).coerceAtLeast(0)
+                                    selectedMonthIndex = months.indexOf(parts[1]).coerceAtLeast(0)
+                                    selectedYearIndex = years.indexOf(parts[2]).coerceAtLeast(0)
+                                }
                                 isEditingDate = true
                             }) {
                                 Icon(
@@ -213,13 +271,11 @@ fun ProfileOverlay(
                                 )
                             }
                         } else {
-                            // Режим редагування (Барабани)
                             Row(
                                 modifier = Modifier.weight(1f),
                                 horizontalArrangement = Arrangement.Center,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                // Барабан Днів
                                 WheelPicker(
                                     items = days,
                                     initialIndex = selectedDayIndex,
@@ -228,7 +284,6 @@ fun ProfileOverlay(
                                 )
                                 Text(text = "/", color = Color.Gray, fontSize = 18.sp, modifier = Modifier.padding(horizontal = 4.dp))
 
-                                // Барабан Місяців
                                 WheelPicker(
                                     items = months,
                                     initialIndex = selectedMonthIndex,
@@ -237,21 +292,21 @@ fun ProfileOverlay(
                                 )
                                 Text(text = "/", color = Color.Gray, fontSize = 18.sp, modifier = Modifier.padding(horizontal = 4.dp))
 
-                                // Барабан Років
                                 WheelPicker(
                                     items = years,
                                     initialIndex = selectedYearIndex,
                                     onItemSelected = { selectedYearIndex = it },
-                                    modifier = Modifier.weight(1.2f) // Трохи ширше, бо там 4 цифри
+                                    modifier = Modifier.weight(1.2f)
                                 )
                             }
 
                             IconButton(onClick = {
-                                // Збираємо дату докупи при збереженні
                                 val d = days[selectedDayIndex]
                                 val m = months[selectedMonthIndex]
                                 val y = years[selectedYearIndex]
-                                birthDate = "$d.$m.$y"
+                                val newDate = "$d.$m.$y"
+                                birthDate = newDate
+                                saveUserUpdate(newBirthDate = newDate)
                                 isEditingDate = false
                             }) {
                                 Icon(
@@ -263,16 +318,8 @@ fun ProfileOverlay(
                         }
                     }
 
-//                    Text(
-//                        text = "Поточний титул: Радість згасання",
-//                        color = Color.Gray,
-//                        fontSize = 14.sp,
-//                        modifier = Modifier.align(Alignment.Start)
-//                    )
-
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // --- ПЕРЕМИКАЧ СТАТІ (MALE / FEMALE) ---
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.fillMaxWidth()
@@ -286,22 +333,24 @@ fun ProfileOverlay(
 
                         Row(
                             modifier = Modifier
-                                .fillMaxWidth(0.8f) // Робимо панель кнопок трохи вужчою за картку
+                                .fillMaxWidth(0.8f)
                                 .border(
                                     width = 1.dp,
                                     color = Color(0xFFB0E0E6).copy(alpha = 0.5f),
                                     shape = RoundedCornerShape(8.dp)
                                 )
                                 .background(
-                                    color = Color(0xFF121224), // Темніший підклад під кнопки
+                                    color = Color(0xFF121224),
                                     shape = RoundedCornerShape(8.dp)
                                 )
-                                .padding(4.dp), // Падінг навколо кнопок всередині рамки
+                                .padding(4.dp),
                             horizontalArrangement = Arrangement.SpaceEvenly
                         ) {
-                            // Кнопка MALE
                             TextButton(
-                                onClick = { selectedGender = "Male" },
+                                onClick = {
+                                    selectedGender = "Male"
+                                    saveUserUpdate(newGender = "Male")
+                                },
                                 modifier = Modifier
                                     .weight(1f)
                                     .background(
@@ -322,9 +371,11 @@ fun ProfileOverlay(
                                 )
                             }
 
-                            // Кнопка FEMALE
                             TextButton(
-                                onClick = { selectedGender = "Female" },
+                                onClick = {
+                                    selectedGender = "Female"
+                                    saveUserUpdate(newGender = "Female")
+                                },
                                 modifier = Modifier
                                     .weight(1f)
                                     .background(
@@ -349,27 +400,28 @@ fun ProfileOverlay(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // Створюємо клікабельний контейнер для звукових ефектів
                     Row(
                         modifier = Modifier
-                            .fillMaxWidth(0.85f) // Робимо ширину красивою та симетричною
+                            .fillMaxWidth(0.85f)
                             .clickable(
                                 interactionSource = remember { MutableInteractionSource() },
-                                indication = null // Прибираємо стандартне біле коло розмиття при кліку, щоб зберегти строгий RPG стиль
+                                indication = null
                             ) {
-                                isSoundEnabled = !isSoundEnabled // Перемикаємо стан при натисканні
+                                val newVal = !isSoundEnabled
+                                isSoundEnabled = newVal
+                                saveUserUpdate(newSoundEnabled = newVal)
                             },
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center // Центруємо весь напис
+                        horizontalArrangement = Arrangement.Center
                     ) {
                         Text(
                             text = "Сповіщення: ",
-                            color = Color(0xFFB0E0E6), // Твій базовий колір інтерфейсу
+                            color = Color(0xFFB0E0E6),
                             fontSize = 14.sp
                         )
                         Text(
                             text = if (isSoundEnabled) "[ УВІМК ]" else "[ ВИМК ]",
-                            color = if (isSoundEnabled) Color(0xFF99FF99) else Color(0xFFAA6666), // Зелений неоновий якщо увімкнено, сірий якщо вимкнено
+                            color = if (isSoundEnabled) Color(0xFF99FF99) else Color(0xFFAA6666),
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(start = 4.dp)
@@ -380,15 +432,15 @@ fun ProfileOverlay(
 
                     Text(
                         text = "[ Налаштування квестів ]",
-                        color = Color(0xFFB0E0E6), // Твій фірмовий колір інтерфейсу
+                        color = Color(0xFFB0E0E6),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
                         modifier = Modifier
                             .clickable(
                                 interactionSource = remember { MutableInteractionSource() },
-                                indication = null // Без стандартного андроїдівського білого кола при кліку
+                                indication = null
                             ) {
-                                onQuestSettingsClick() // Викликаємо відкриття іншого оверлея
+                                onQuestSettingsClick()
                             }
                     )
 
@@ -412,12 +464,10 @@ fun WheelPicker(
     modifier: Modifier = Modifier
 ) {
     val itemHeight = 40.dp
-    // Додаємо порожні елементи зверху і знизу, щоб поточний елемент завжди був по центру
     val listItems = remember(items) { listOf("") + items + listOf("") }
     val listState = rememberLazyListState(initialFirstVisibleItemIndex = initialIndex)
     val snapFlingBehavior = rememberSnapFlingBehavior(lazyListState = listState)
 
-    // Відстежуємо, який елемент зараз по центру
     LaunchedEffect(listState.isScrollInProgress) {
         if (!listState.isScrollInProgress) {
             val centerIndex = listState.firstVisibleItemIndex
@@ -428,7 +478,7 @@ fun WheelPicker(
     }
 
     Box(
-        modifier = modifier.height(itemHeight * 3), // Показуємо 3 елементи одночасно
+        modifier = modifier.height(itemHeight * 3),
         contentAlignment = Alignment.Center
     ) {
         LazyColumn(
@@ -446,11 +496,10 @@ fun WheelPicker(
                         .height(itemHeight),
                     contentAlignment = Alignment.Center
                 ) {
-                    // Визначаємо, чи елемент зараз по центру (активний)
                     val isSelected = index == listState.firstVisibleItemIndex + 1
                     Text(
                         text = itemText,
-                        color = if (isSelected) Color(0xFF00E6F0) else Color.Gray, // Неоновий фокус
+                        color = if (isSelected) Color(0xFF00E6F0) else Color.Gray,
                         fontSize = if (isSelected) 18.sp else 14.sp
                     )
                 }

@@ -49,7 +49,7 @@ fun HomeScreen() {
     val questRepository = remember(context) {
         QuestRepositoryImpl(AppDatabase.getInstance(context).questDao())
     }
-    val activeQuests by questRepository.observeActiveQuests().collectAsState(initial = emptyList())
+    val activeQuests by questRepository.observeAllQuests().collectAsState(initial = emptyList())
 
     var isProfileOpen by remember { mutableStateOf(false) }
     var isQuestSettingsOpen by remember { mutableStateOf(false) }
@@ -248,45 +248,94 @@ fun HomeScreen() {
                         .fillMaxWidth()
                         .weight(1f) // Займає весь вільний простір між лінією та варнінгом
                         .padding(vertical = 12.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     items(activeQuests) { quest ->
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(Color(0xFF161622).copy(alpha = 0.6f), RoundedCornerShape(8.dp))
-                                .border(1.dp, Color(0xFFB0E0E6).copy(alpha = 0.2f), RoundedCornerShape(8.dp))
-                                .padding(horizontal = 12.dp, vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
+                                .height(54.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = quest.title,
-                                    color = Color.White,
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.Medium
+                            // 1. Category Icon with Neon Glow
+                            Box(
+                                modifier = Modifier
+                                    .size(44.dp)
+                                    .padding(end = 8.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                val iconRes = when (quest.category) {
+                                    "coding" -> R.drawable.questicocode
+                                    "physical" -> R.drawable.questicogym
+                                    else -> R.drawable.questicobook
+                                }
+                                
+                                // Glow Layer
+                                Image(
+                                    painter = painterResource(id = iconRes),
+                                    contentDescription = null,
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .graphicsLayer {
+                                            renderEffect = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                                RenderEffect.createBlurEffect(12f, 12f, Shader.TileMode.DECAL)
+                                                    .asComposeRenderEffect()
+                                            } else null
+                                        },
+                                    colorFilter = ColorFilter.tint(
+                                        Color(0xFF00E6F0),
+                                        blendMode = androidx.compose.ui.graphics.BlendMode.SrcIn
+                                    )
                                 )
-                                Text(
-                                    text = "+${quest.expReward} EXP",
-                                    color = Color(0xFF00E6F0),
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold
+                                // Sharp original layer
+                                Image(
+                                    painter = painterResource(id = iconRes),
+                                    contentDescription = null,
+                                    modifier = Modifier.fillMaxSize()
                                 )
                             }
-                            
-                            Checkbox(
-                                checked = quest.isCompleted,
-                                onCheckedChange = { checked ->
-                                    coroutineScope.launch {
-                                        questRepository.setQuestCompleted(quest.id, checked)
-                                    }
-                                },
-                                colors = CheckboxDefaults.colors(
-                                    checkedColor = Color(0xFF00FF66),
-                                    uncheckedColor = Color(0xFFB0E0E6),
-                                    checkmarkColor = Color.Black
-                                )
+
+                            // 2. Title of the Quest
+                            Text(
+                                text = quest.title,
+                                color = Color.White,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Medium,
+                                modifier = Modifier.weight(1f)
+                            )
+
+                            // 3. Ratio [progress/target]
+                            Text(
+                                text = "[${quest.progress}/${quest.target}]",
+                                color = Color(0xFFB0E0E6),
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Medium,
+                                modifier = Modifier.padding(horizontal = 8.dp)
+                            )
+
+                            Spacer(modifier = Modifier.width(8.dp))
+
+                            // 4. Clickable Custom Checkbox Box
+                            Image(
+                                painter = painterResource(
+                                    id = if (quest.isCompleted) R.drawable.questboxcompletedcheck else R.drawable.questbox
+                                ),
+                                contentDescription = "Complete Quest Box",
+                                modifier = Modifier
+                                    .size(34.dp)
+                                    .clickable(
+                                        interactionSource = remember { MutableInteractionSource() },
+                                        indication = null
+                                    ) {
+                                        val newCompleted = !quest.isCompleted
+                                        val newProgress = if (newCompleted) quest.target else 0
+                                        coroutineScope.launch {
+                                            questRepository.updateQuest(
+                                                quest.copy(isCompleted = newCompleted, progress = newProgress)
+                                            )
+                                        }
+                                    },
+                                contentScale = ContentScale.Fit
                             )
                         }
                     }

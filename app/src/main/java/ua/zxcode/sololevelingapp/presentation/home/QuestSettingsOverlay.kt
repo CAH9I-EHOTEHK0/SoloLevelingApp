@@ -32,6 +32,13 @@ import ua.zxcode.sololevelingapp.data.local.db.AppDatabase
 import ua.zxcode.sololevelingapp.data.local.entity.QuestEntity
 import ua.zxcode.sololevelingapp.data.repository.impl.QuestRepositoryImpl
 
+data class Quadruple<out A, out B, out C, out D>(
+    val first: A,
+    val second: B,
+    val third: C,
+    val fourth: D
+)
+
 enum class QuestCategory {
     READING, CODING, LANGUAGES, PHYSICAL
 }
@@ -373,28 +380,33 @@ fun QuestSettingsOverlay(
                         Button(
                             onClick = {
                                 // Add validation & save to DB
-                                val (title, reward, dbCategory) = when (selectedCategory) {
+                                val (title, reward, dbCategory, target) = when (selectedCategory) {
                                     QuestCategory.READING -> {
-                                        val book = bookTitle.trim().ifEmpty { "Книгу" }
-                                        val pages = readingPages.toIntOrNull() ?: 1
-                                        Triple("Читати книгу \"$book\" ($pages стор.)", pages * 4, "mental")
+                                        val book = bookTitle.trim().ifEmpty { "Book" }
+                                        val pages = readingPages.toIntOrNull() ?: 15
+                                        val rewardVal = pages * 4
+                                        Quadruple(book, rewardVal, "mental", pages)
                                     }
                                     QuestCategory.CODING -> {
-                                        val proj = projectTitle.trim().ifEmpty { "Проект" }
+                                        val proj = projectTitle.trim().ifEmpty { "Code" }
                                         val lines = codingLines.toIntOrNull() ?: 100
-                                        Triple("Написати код: \"$proj\" ($lines рядків)", (lines * 0.5).toInt().coerceIn(10, 150), "coding")
+                                        val rewardVal = (lines * 0.5).toInt().coerceIn(10, 150)
+                                        Quadruple(proj, rewardVal, "coding", lines)
                                     }
                                     QuestCategory.LANGUAGES -> {
-                                        val lang = languageName.trim().ifEmpty { "Мова" }
-                                        val target = languageTarget.toIntOrNull() ?: 10
-                                        val metric = languageMetric.lowercase()
-                                        Triple("Вивчення $lang: $target $metric", target * 3, "languages")
+                                        val lang = languageName.trim().ifEmpty { "Language" }
+                                        val targetVal = languageTarget.toIntOrNull() ?: 10
+                                        val rewardVal = targetVal * 3
+                                        Quadruple(lang, rewardVal, "languages", targetVal)
                                     }
                                     QuestCategory.PHYSICAL -> {
-                                        val exercise = physicalExercise.trim().ifEmpty { "Тренування" }
+                                        val exercise = physicalExercise.trim().ifEmpty { "Push-ups" }
+                                        val cleanName = exercise.split(" (").first()
                                         val sets = physicalSets.toIntOrNull() ?: 3
                                         val reps = physicalReps.toIntOrNull() ?: 12
-                                        Triple("Спорт: $exercise ($sets x $reps)", sets * reps * 2, "physical")
+                                        val targetVal = sets * reps
+                                        val rewardVal = sets * reps * 2
+                                        Quadruple(cleanName, rewardVal, "physical", targetVal)
                                     }
                                 }
 
@@ -404,7 +416,9 @@ fun QuestSettingsOverlay(
                                             title = title,
                                             expReward = reward,
                                             isCompleted = false,
-                                            category = dbCategory
+                                            category = dbCategory,
+                                            progress = 0,
+                                            target = target
                                         )
                                     )
                                     Toast.makeText(context, "Квест збережено!", Toast.LENGTH_SHORT).show()

@@ -15,7 +15,7 @@ import ua.zxcode.sololevelingapp.data.local.entity.*
         QuestEntity::class,
         AchievementEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
