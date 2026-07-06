@@ -152,22 +152,25 @@ fun HomeScreen() {
                     )
                 }
 
-                if (isProfileOpen) {
-                    ProfileOverlay(
-                        onDismiss = { isProfileOpen = false }, // Закриваємо при натисканні назад або на кнопку
-                        onQuestSettingsClick = {
-                            isProfileOpen = false
-                            isQuestSettingsOpen = true
-                        }
-                    )
-                }
 
-                if (isQuestSettingsOpen) {
-                    QuestSettingsOverlay(
-                        onDismiss = { isQuestSettingsOpen = false }
-                    )
-                }
             }
+        }
+
+        // ── Overlays (поза Row, щоб не впливати на лейаут хедера) ──────────
+        if (isProfileOpen) {
+            ProfileOverlay(
+                onDismiss = { isProfileOpen = false },
+                onQuestSettingsClick = {
+                    isProfileOpen = false
+                    isQuestSettingsOpen = true
+                }
+            )
+        }
+
+        if (isQuestSettingsOpen) {
+            QuestSettingsOverlay(
+                onDismiss = { isQuestSettingsOpen = false }
+            )
         }
 
         //квест бокс.
