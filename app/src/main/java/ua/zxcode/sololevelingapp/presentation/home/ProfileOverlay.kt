@@ -42,6 +42,9 @@ fun ProfileOverlay(
     val questRepository = remember(context) {
         ua.zxcode.sololevelingapp.data.repository.impl.QuestRepositoryImpl(AppDatabase.getInstance(context).questDao())
     }
+    val achievementRepository = remember(context) {
+        ua.zxcode.sololevelingapp.data.repository.impl.AchievementRepositoryImpl(AppDatabase.getInstance(context).achievementDao())
+    }
     
     val userState by userRepository.observeUser().collectAsState(initial = null)
 
@@ -480,6 +483,7 @@ fun ProfileOverlay(
                                     )
                                 }
                                 questRepository.resetAllQuestsProgress()
+                                achievementRepository.deleteAllAchievements()
                             }
                         }) {
                             Text(

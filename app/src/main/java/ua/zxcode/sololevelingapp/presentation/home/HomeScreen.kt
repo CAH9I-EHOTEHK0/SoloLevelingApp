@@ -38,8 +38,12 @@ import ua.zxcode.sololevelingapp.R
 import ua.zxcode.sololevelingapp.data.local.db.AppDatabase
 import ua.zxcode.sololevelingapp.data.repository.impl.UserRepositoryImpl
 import ua.zxcode.sololevelingapp.data.repository.impl.QuestRepositoryImpl
+import ua.zxcode.sololevelingapp.data.repository.impl.AchievementRepositoryImpl
 import ua.zxcode.sololevelingapp.data.local.entity.UserEntity
 import ua.zxcode.sololevelingapp.presentation.components.SoloLevelingBackground
+import ua.zxcode.sololevelingapp.presentation.achievements.AchievementIds
+import ua.zxcode.sololevelingapp.presentation.achievements.computeRank
+import ua.zxcode.sololevelingapp.presentation.achievements.defaultAchievements
 import kotlinx.coroutines.launch
 
 private fun closeApp(context: android.content.Context) {
@@ -56,8 +60,19 @@ fun HomeScreen() {
     val userRepository = remember(context) {
         UserRepositoryImpl(AppDatabase.getInstance(context).userDao())
     }
+    val achievementRepository = remember(context) {
+        AchievementRepositoryImpl(AppDatabase.getInstance(context).achievementDao())
+    }
     val activeQuests by questRepository.observeAllQuests().collectAsState(initial = emptyList())
     val userState by userRepository.observeUser().collectAsState(initial = null)
+
+    // Seed achievements on first launch
+    LaunchedEffect(Unit) {
+        val existing = achievementRepository.getAchievementById(AchievementIds.SYSTEM_ARCHITECT)
+        if (existing == null) {
+            achievementRepository.insertAchievements(defaultAchievements())
+        }
+    }
 
     val currentLevel = userState?.currentLevel ?: 0
     val currentXp = userState?.currentXp ?: 0
@@ -391,7 +406,7 @@ fun HomeScreen() {
                                                 quest.copy(isCompleted = newCompleted, progress = newProgress)
                                             )
                                             if (newCompleted) {
-                                                val xpGain = if (quest.isPenalty) 15 else 10
+                                                val xpGain = if (quest.isPenalty) (quest.expReward * 1.5).toInt() else quest.expReward
                                                 val user = userRepository.getUser()
                                                 if (user != null) {
                                                     var newXp = user.currentXp + xpGain
@@ -428,9 +443,35 @@ fun HomeScreen() {
                                                         )
                                                     )
                                                 }
+                                                // ── ACHIEVEMENT TRACKING ──
+                                                val achievementId = when (quest.category) {
+                                                    "coding"   -> AchievementIds.SYSTEM_ARCHITECT
+                                                    "mental"   -> AchievementIds.MONARCH_LIBRARY
+                                                    "languages"-> AchievementIds.POLYGLOT
+                                                    "physical" -> AchievementIds.ROAD_TO_OLYMPUS
+                                                    else       -> null
+                                                }
+                                                if (achievementId != null) {
+                                                     val achv = achievementRepository.getAchievementById(achievementId)
+                                                     if (achv != null) {
+                                                         val addAmount = when (quest.category) {
+                                                             "mental", "physical" -> quest.target.toLong()
+                                                             else -> 1L
+                                                         }
+                                                         val newProgress = achv.progress + addAmount
+                                                         val newRank = computeRank(achievementId, newProgress)
+                                                         achievementRepository.updateAchievement(
+                                                             achv.copy(
+                                                                 progress = newProgress,
+                                                                 currentRank = newRank,
+                                                                 isCompleted = newRank == 5
+                                                             )
+                                                         )
+                                                     }
+                                                }
                                             } else {
                                                 // If uncompleted, subtract XP
-                                                val xpLoss = if (quest.isPenalty) 15 else 10
+                                                val xpLoss = if (quest.isPenalty) (quest.expReward * 1.5).toInt() else quest.expReward
                                                 val user = userRepository.getUser()
                                                 if (user != null) {
                                                     var newXp = user.currentXp - xpLoss
@@ -450,6 +491,32 @@ fun HomeScreen() {
                                                             xpToNextLevel = nextLvlThreshold
                                                         )
                                                     )
+                                                }
+                                                // ── SUBTRACT PROGRESS FROM ACHIEVEMENTS ON UNCHECK ──
+                                                val achievementId = when (quest.category) {
+                                                    "coding"   -> AchievementIds.SYSTEM_ARCHITECT
+                                                    "mental"   -> AchievementIds.MONARCH_LIBRARY
+                                                    "languages"-> AchievementIds.POLYGLOT
+                                                    "physical" -> AchievementIds.ROAD_TO_OLYMPUS
+                                                    else       -> null
+                                                }
+                                                if (achievementId != null) {
+                                                    val achv = achievementRepository.getAchievementById(achievementId)
+                                                    if (achv != null) {
+                                                        val subtractAmount = when (quest.category) {
+                                                            "mental", "physical" -> quest.target.toLong()
+                                                            else -> 1L
+                                                        }
+                                                        val newProgress = (achv.progress - subtractAmount).coerceAtLeast(0L)
+                                                        val newRank = computeRank(achievementId, newProgress)
+                                                        achievementRepository.updateAchievement(
+                                                            achv.copy(
+                                                                progress = newProgress,
+                                                                currentRank = newRank,
+                                                                isCompleted = newRank == 5
+                                                            )
+                                                        )
+                                                    }
                                                 }
                                             }
                                         }

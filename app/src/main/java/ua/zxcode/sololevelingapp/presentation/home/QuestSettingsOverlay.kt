@@ -465,6 +465,7 @@ fun QuestSettingsOverlay(
                                         resetForm()
                                         currentScreen = QuestSettingsScreen.LIST
                                     },
+                                    contentPadding = PaddingValues(vertical = 12.dp),
                                     modifier = Modifier.weight(1f)
                                 ) {
                                     Text("НАЗАД", color = Color(0xFFFF3366), fontWeight = FontWeight.Bold)
@@ -493,8 +494,9 @@ fun QuestSettingsOverlay(
                                                 val cleanName = exercise.split(" (").first()
                                                 val sets = physicalSets.toIntOrNull() ?: 3
                                                 val reps = physicalReps.toIntOrNull() ?: 12
-                                                val targetVal = sets * reps
-                                                Quadruple(cleanName, targetVal * 2, "physical", targetVal)
+                                                val displayTitle = "$cleanName ($reps повт.)"
+                                                val reward = sets * reps * 2
+                                                Quadruple(displayTitle, reward, "physical", sets)
                                             }
                                         }
 
@@ -537,6 +539,7 @@ fun QuestSettingsOverlay(
                                         }
                                     },
                                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00FF66).copy(alpha = 0.2f)),
+                                    contentPadding = PaddingValues(vertical = 12.dp, horizontal = 8.dp),
                                     modifier = Modifier
                                         .weight(1.2f)
                                         .border(1.dp, Color(0xFF00FF66), RoundedCornerShape(8.dp))
@@ -680,7 +683,7 @@ fun CategoryButton(
                 RoundedCornerShape(8.dp)
             )
             .clickable { onClick() }
-            .padding(vertical = 10.dp),
+            .padding(vertical = 14.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(

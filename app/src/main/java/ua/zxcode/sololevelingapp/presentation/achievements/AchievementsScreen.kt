@@ -1,31 +1,20 @@
 package ua.zxcode.sololevelingapp.presentation.achievements
 
+import android.graphics.RenderEffect
+import android.graphics.Shader
+import android.os.Build
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asComposeRenderEffect
 import androidx.compose.ui.graphics.graphicsLayer
@@ -35,39 +24,36 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import android.graphics.RenderEffect
-import android.graphics.Shader
-import android.os.Build
-import android.widget.Toast
-import ua.zxcode.sololevelingapp.R
+import kotlinx.coroutines.launch
+import ua.zxcode.sololevelingapp.data.local.db.AppDatabase
+import ua.zxcode.sololevelingapp.data.local.entity.AchievementEntity
+import ua.zxcode.sololevelingapp.data.repository.impl.AchievementRepositoryImpl
 import ua.zxcode.sololevelingapp.presentation.components.SoloLevelingBackground
-
-data class AchievementData(
-    val title: String,
-    val iconResId: Int
-)
-
-val achievementsList = listOf(
-    AchievementData("Архітектор Системи", R.drawable.achvsystemarchitect),
-    AchievementData("Бібліотека Монарха", R.drawable.achvmonarchlibrary),
-    AchievementData("Лінгвістичний Поліглот", R.drawable.achvlinguisticpolyglot),
-    AchievementData("Шлях до Олімпу", R.drawable.achvroadtoolympus),
-    AchievementData("Гравці в реальне життя", R.drawable.achvplayersirl)
-)
 
 @Composable
 fun AchievementsScreen() {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    val achievementRepository = remember(context) {
+        AchievementRepositoryImpl(AppDatabase.getInstance(context).achievementDao())
+    }
+    val achievements by achievementRepository.observeAllAchievements().collectAsState(initial = emptyList())
+
+    // Seed default achievements if DB is empty
+    LaunchedEffect(Unit) {
+        coroutineScope.launch {
+            val existing = achievementRepository.getAchievementById(AchievementIds.SYSTEM_ARCHITECT)
+            if (existing == null) {
+                achievementRepository.insertAchievements(defaultAchievements())
+            }
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        Color(0xFF141C2B),
-                        Color(0xFF120A1F),
-                    )
-                )
+                color = Color(0xFF141C2B)
             ),
         contentAlignment = Alignment.Center
     ) {
@@ -79,20 +65,15 @@ fun AchievementsScreen() {
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
                 modifier = Modifier.fillMaxSize().padding(top = 26.dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                items(achievementsList) { achievement ->
-                    AchievementItem(
-                        achievement = achievement,
-                        onClick = {
-                            Toast.makeText(context, "Clicked ${achievement.title}", Toast.LENGTH_SHORT).show()
-                        }
-                    )
+                val displayList = if (achievements.isEmpty()) defaultAchievements() else achievements
+                items(displayList) { achievement ->
+                    AchievementItem(achievement = achievement)
                 }
             }
         }
@@ -100,66 +81,105 @@ fun AchievementsScreen() {
 }
 
 @Composable
-fun AchievementItem(achievement: AchievementData, onClick: () -> Unit) {
-    Card(
+fun AchievementItem(achievement: AchievementEntity) {
+    val rankIndex = achievement.currentRank
+    val hasRank = rankIndex >= 0
+    val rankLabel = if (hasRank) RANK_LABELS[rankIndex] else "—"
+    val rankColor = if (hasRank) Color(RANK_COLORS[rankIndex]) else Color(0xFF4A5568)
+    val iconTint = if (hasRank) rankColor else Color(0xFF4A5568)
+
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(160.dp) // фіксована висота — всі картки однакові
-            .clickable(
-                onClick = onClick,
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null
-            ),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF1E283A).copy(alpha = 0.5f)
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            .height(175.dp)
+            .background(
+                color = Color(0xFF1A2236).copy(alpha = 0.85f),
+                shape = RoundedCornerShape(12.dp)
+            )
+            .border(
+                width = 1.dp,
+                color = rankColor.copy(alpha = if (hasRank) 0.5f else 0.2f),
+                shape = RoundedCornerShape(12.dp)
+            )
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 12.dp, vertical = 16.dp),
+                .padding(horizontal = 12.dp, vertical = 10.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
+            // Rank badge
             Box(
-                modifier = Modifier.size(80.dp),
+                modifier = Modifier
+                    .background(
+                        color = rankColor.copy(alpha = if (hasRank) 0.15f else 0.08f),
+                        shape = RoundedCornerShape(6.dp)
+                    )
+                    .padding(horizontal = 10.dp, vertical = 2.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "РАНГ $rankLabel",
+                    color = rankColor,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Icon with glow
+            Box(
+                modifier = Modifier.size(56.dp),
                 contentAlignment = Alignment.Center
             ) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                     Icon(
                         painter = painterResource(id = achievement.iconResId),
                         contentDescription = null,
-                        tint = Color(0xFF00E6F0),
+                        tint = rankColor,
                         modifier = Modifier
                             .fillMaxSize()
                             .graphicsLayer {
                                 renderEffect = RenderEffect
-                                    .createBlurEffect(10f, 10f, Shader.TileMode.DECAL)
+                                    .createBlurEffect(12f, 12f, Shader.TileMode.DECAL)
                                     .asComposeRenderEffect()
                             }
                     )
                 }
-
                 Icon(
                     painter = painterResource(id = achievement.iconResId),
                     contentDescription = achievement.title,
-                    tint = Color(0xFFB0E0E6),
+                    tint = iconTint,
                     modifier = Modifier.fillMaxSize()
                 )
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
+            // Title
             Text(
                 text = achievement.title,
                 color = Color.White,
-                fontSize = 13.sp,
+                fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
                 maxLines = 2,
-                lineHeight = 17.sp
+                lineHeight = 15.sp
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            // Progress text
+            Text(
+                text = progressText(achievement),
+                color = rankColor.copy(alpha = 0.85f),
+                fontSize = 10.sp,
+                textAlign = TextAlign.Center,
+                maxLines = 2,
+                lineHeight = 13.sp
             )
         }
     }

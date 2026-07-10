@@ -13,6 +13,22 @@ val CloisterFont = FontFamily(
 )
 
 val Typography = Typography(
+    displayLarge = TextStyle(fontFamily = CloisterFont),
+    displayMedium = TextStyle(fontFamily = CloisterFont),
+    displaySmall = TextStyle(fontFamily = CloisterFont),
+    
+    headlineLarge = TextStyle(fontFamily = CloisterFont),
+    headlineMedium = TextStyle(fontFamily = CloisterFont),
+    headlineSmall = TextStyle(fontFamily = CloisterFont),
+    
+    titleLarge = TextStyle(
+        fontFamily = CloisterFont,
+        fontWeight = FontWeight.Bold,
+        fontSize = 22.sp
+    ),
+    titleMedium = TextStyle(fontFamily = CloisterFont),
+    titleSmall = TextStyle(fontFamily = CloisterFont),
+    
     bodyLarge = TextStyle(
         fontFamily = CloisterFont,
         fontWeight = FontWeight.Normal,
@@ -25,14 +41,17 @@ val Typography = Typography(
         fontWeight = FontWeight.Normal,
         fontSize = 14.sp
     ),
-    titleLarge = TextStyle(
+    bodySmall = TextStyle(fontFamily = CloisterFont),
+    
+    labelLarge = TextStyle(
         fontFamily = CloisterFont,
         fontWeight = FontWeight.Bold,
-        fontSize = 22.sp
+        fontSize = 14.sp
     ),
     labelMedium = TextStyle(
         fontFamily = CloisterFont,
         fontWeight = FontWeight.Medium,
         fontSize = 12.sp
-    )
+    ),
+    labelSmall = TextStyle(fontFamily = CloisterFont)
 )

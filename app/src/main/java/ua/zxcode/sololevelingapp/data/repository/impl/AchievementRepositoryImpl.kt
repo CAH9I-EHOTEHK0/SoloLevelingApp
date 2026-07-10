@@ -13,9 +13,6 @@ class AchievementRepositoryImpl @Inject constructor(
     override fun observeAllAchievements(): Flow<List<AchievementEntity>> =
         achievementDao.observeAllAchievements()
 
-    override fun observeUnlockedAchievements(): Flow<List<AchievementEntity>> =
-        achievementDao.observeUnlockedAchievements()
-
     override suspend fun getAchievementById(achievementId: String): AchievementEntity? =
         achievementDao.getAchievementById(achievementId)
 
@@ -28,6 +25,6 @@ class AchievementRepositoryImpl @Inject constructor(
     override suspend fun updateAchievement(achievement: AchievementEntity) =
         achievementDao.updateAchievement(achievement)
 
-    override suspend fun unlockAchievement(achievementId: String, timestamp: Long) =
-        achievementDao.unlockAchievement(achievementId, timestamp)
+    override suspend fun deleteAllAchievements() =
+        achievementDao.deleteAllAchievements()
 }

@@ -10,9 +10,6 @@ interface AchievementDao {
     @Query("SELECT * FROM achievements")
     fun observeAllAchievements(): Flow<List<AchievementEntity>>
 
-    @Query("SELECT * FROM achievements WHERE isUnlocked = 1")
-    fun observeUnlockedAchievements(): Flow<List<AchievementEntity>>
-
     @Query("SELECT * FROM achievements WHERE id = :achievementId")
     suspend fun getAchievementById(achievementId: String): AchievementEntity?
 
@@ -25,9 +22,6 @@ interface AchievementDao {
     @Update
     suspend fun updateAchievement(achievement: AchievementEntity)
 
-    @Query("UPDATE achievements SET isUnlocked = 1, unlockDate = :timestamp WHERE id = :achievementId")
-    suspend fun unlockAchievement(achievementId: String, timestamp: Long)
-
-    @Delete
-    suspend fun deleteAchievement(achievement: AchievementEntity)
+    @Query("DELETE FROM achievements")
+    suspend fun deleteAllAchievements()
 }

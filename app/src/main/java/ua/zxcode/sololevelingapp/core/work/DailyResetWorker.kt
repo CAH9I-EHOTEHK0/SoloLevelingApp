@@ -14,6 +14,8 @@ import ua.zxcode.sololevelingapp.MainActivity
 import ua.zxcode.sololevelingapp.R
 import ua.zxcode.sololevelingapp.data.local.db.AppDatabase
 import ua.zxcode.sololevelingapp.data.local.entity.QuestEntity
+import ua.zxcode.sololevelingapp.presentation.achievements.AchievementIds
+import ua.zxcode.sololevelingapp.presentation.achievements.computeRank
 
 class DailyResetWorker(
     private val context: Context,
@@ -41,16 +43,13 @@ class DailyResetWorker(
         val uncompletedQuests = allQuests.filter { !it.isCompleted }
 
         if (uncompletedQuests.isNotEmpty()) {
-            // Apply Penalty:
-            // 1. Double/1.5x target for penalty quests. (1.5x as requested)
-            // 2. Set isPenalty = true
+            // ── PENALTY: not all quests completed ──
             uncompletedQuests.forEach { quest ->
                 val newTarget = if (!quest.isPenalty) {
                     (quest.originalTarget * 1.5).toInt().coerceAtLeast(quest.originalTarget + 1)
                 } else {
-                    quest.target // Penalty is already active, don't stack it more than once as requested (одноразово)
+                    quest.target
                 }
-
                 questDao.updateQuest(
                     quest.copy(
                         target = newTarget,
@@ -59,16 +58,30 @@ class DailyResetWorker(
                     )
                 )
             }
-
             if (isNotificationsEnabled) {
                 sendNotification(
                     title = "СИСТЕМА: Отримано Штраф!",
-                    message = "Ви не виконали daily квести вчора. Цілі збільшено на 50%, досвід за виконання квесту: +15 XP.",
+                    message = "Ви не виконали daily квести вчора. Цілі збільшено на 50%.",
                     notificationId = PENALTY_NOTIFICATION_ID
                 )
             }
         } else {
-            // Reset regular/penalty quests for the next day
+            // ── PERFECT DAY: all quests completed ──
+            val achievementDao = database.achievementDao()
+            val playersAchv = achievementDao.getAchievementById(AchievementIds.PLAYERS_IRL)
+            if (playersAchv != null) {
+                val newProgress = playersAchv.progress + 1L
+                val newRank = computeRank(AchievementIds.PLAYERS_IRL, newProgress)
+                achievementDao.updateAchievement(
+                    playersAchv.copy(
+                        progress = newProgress,
+                        currentRank = newRank,
+                        isCompleted = newRank == 5
+                    )
+                )
+            }
+
+            // Reset quests for the new day
             allQuests.forEach { quest ->
                 questDao.updateQuest(
                     quest.copy(
