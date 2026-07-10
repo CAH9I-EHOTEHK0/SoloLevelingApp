@@ -10,7 +10,9 @@ data class QuestEntity(
     val title: String,
     val expReward: Int,
     val isCompleted: Boolean = false,
-    val category: String,         // "steps", "sleep", "strength", etc.
+    val category: String,         // "mental", "coding", "languages", "physical"
     val progress: Int = 0,
-    val target: Int = 1
+    val target: Int = 1,
+    val isPenalty: Boolean = false,
+    val originalTarget: Int = 1
 )

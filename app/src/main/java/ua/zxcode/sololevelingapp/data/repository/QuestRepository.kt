@@ -13,4 +13,5 @@ interface QuestRepository {
     suspend fun setQuestCompleted(questId: Long, isCompleted: Boolean)
     suspend fun deleteQuest(quest: QuestEntity)
     suspend fun deleteAllQuests()
+    suspend fun resetAllQuestsProgress()
 }

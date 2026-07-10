@@ -39,6 +39,9 @@ fun ProfileOverlay(
     val userRepository = remember(context) {
         UserRepositoryImpl(AppDatabase.getInstance(context).userDao())
     }
+    val questRepository = remember(context) {
+        ua.zxcode.sololevelingapp.data.repository.impl.QuestRepositoryImpl(AppDatabase.getInstance(context).questDao())
+    }
     
     val userState by userRepository.observeUser().collectAsState(initial = null)
 
@@ -74,7 +77,7 @@ fun ProfileOverlay(
                     UserEntity(
                         id = 1,
                         nickname = newNickname,
-                        currentLevel = 1,
+                        currentLevel = 0,
                         currentXp = 0,
                         xpToNextLevel = 100,
                         gender = newGender,
@@ -446,8 +449,49 @@ fun ProfileOverlay(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    TextButton(onClick = { onDismiss() }) {
-                        Text(text = "ЗАКРИТИ", color = Color(0xFFFF3366), fontWeight = FontWeight.Bold)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        TextButton(onClick = {
+                            coroutineScope.launch {
+                                val currentUser = userRepository.getUser()
+                                if (currentUser != null) {
+                                    userRepository.updateUser(
+                                        currentUser.copy(
+                                            currentLevel = 0,
+                                            currentXp = 0,
+                                            xpToNextLevel = 100
+                                        )
+                                    )
+                                } else {
+                                    userRepository.insertUser(
+                                        UserEntity(
+                                            id = 1,
+                                            nickname = username,
+                                            currentLevel = 0,
+                                            currentXp = 0,
+                                            xpToNextLevel = 100,
+                                            gender = selectedGender,
+                                            birthDate = birthDate,
+                                            isSoundEnabled = isSoundEnabled
+                                        )
+                                    )
+                                }
+                                questRepository.resetAllQuestsProgress()
+                            }
+                        }) {
+                            Text(
+                                text = "Скинути прогрес",
+                                color = Color(0xFFFF9900),
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+
+                        TextButton(onClick = { onDismiss() }) {
+                            Text(text = "ЗАКРИТИ", color = Color(0xFFFF3366), fontWeight = FontWeight.Bold)
+                        }
                     }
                 }
             }

@@ -21,4 +21,5 @@ class QuestRepositoryImpl @Inject constructor(
         questDao.setQuestCompleted(questId, isCompleted)
     override suspend fun deleteQuest(quest: QuestEntity) = questDao.deleteQuest(quest)
     override suspend fun deleteAllQuests() = questDao.deleteAllQuests()
+    override suspend fun resetAllQuestsProgress() = questDao.resetAllQuestsProgress()
 }

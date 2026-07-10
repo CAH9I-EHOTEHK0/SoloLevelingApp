@@ -36,4 +36,7 @@ interface QuestDao {
 
     @Query("DELETE FROM quests")
     suspend fun deleteAllQuests()
+
+    @Query("UPDATE quests SET isCompleted = 0, progress = 0")
+    suspend fun resetAllQuestsProgress()
 }

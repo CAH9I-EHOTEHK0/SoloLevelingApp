@@ -65,4 +65,5 @@ dependencies {
     implementation("com.google.dagger:hilt-android:2.51")
     ksp("com.google.dagger:hilt-compiler:2.51")
     implementation("androidx.compose.material:material-icons-extended")
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
 }

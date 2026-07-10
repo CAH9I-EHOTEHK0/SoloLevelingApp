@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.core.view.WindowCompat
 import androidx.activity.enableEdgeToEdge
+import android.content.Context
 import ua.zxcode.sololevelingapp.core.navigation.AppNavigation
 import ua.zxcode.sololevelingapp.ui.theme.SoloLevelingAppTheme
 
@@ -30,10 +31,44 @@ class MainActivity : ComponentActivity() {
         //     isAppearanceLightNavigationBars = false
         // }
 
+        // Request runtime permission for notifications on Android 13+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 101)
+        }
+
+        // Schedule Daily Reset/Checks via WorkManager
+        scheduleDailyResetWork(this)
+
         setContent {
             SoloLevelingAppTheme {
                 AppNavigation()
             }
         }
+    }
+
+    private fun scheduleDailyResetWork(context: Context) {
+        val workRequest = androidx.work.PeriodicWorkRequestBuilder<ua.zxcode.sololevelingapp.core.work.DailyResetWorker>(
+            24, java.util.concurrent.TimeUnit.HOURS
+        )
+            .setInitialDelay(calculateInitialDelayToMidnight(), java.util.concurrent.TimeUnit.MILLISECONDS)
+            .addTag("DailyResetWorkTag")
+            .build()
+
+        androidx.work.WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+            "DailyResetWork",
+            androidx.work.ExistingPeriodicWorkPolicy.KEEP,
+            workRequest
+        )
+    }
+
+    private fun calculateInitialDelayToMidnight(): Long {
+        val calendar = java.util.Calendar.getInstance()
+        val now = calendar.timeInMillis
+        calendar.set(java.util.Calendar.HOUR_OF_DAY, 0)
+        calendar.set(java.util.Calendar.MINUTE, 0)
+        calendar.set(java.util.Calendar.SECOND, 0)
+        calendar.set(java.util.Calendar.MILLISECOND, 0)
+        calendar.add(java.util.Calendar.DAY_OF_YEAR, 1)
+        return calendar.timeInMillis - now
     }
 }

@@ -2,33 +2,37 @@ package ua.zxcode.sololevelingapp.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import ua.zxcode.sololevelingapp.R
 
-// Set of Material typography styles to start with
+val CloisterFont = FontFamily(
+    Font(R.font.cloister_a, FontWeight.Normal)
+)
+
 val Typography = Typography(
     bodyLarge = TextStyle(
-        fontFamily = FontFamily.Default,
+        fontFamily = CloisterFont,
         fontWeight = FontWeight.Normal,
         fontSize = 16.sp,
         lineHeight = 24.sp,
         letterSpacing = 0.5.sp
-    )
-    /* Other default text styles to override
-    titleLarge = TextStyle(
-        fontFamily = FontFamily.Default,
-        fontWeight = FontWeight.Normal,
-        fontSize = 22.sp,
-        lineHeight = 28.sp,
-        letterSpacing = 0.sp
     ),
-    labelSmall = TextStyle(
-        fontFamily = FontFamily.Default,
+    bodyMedium = TextStyle(
+        fontFamily = CloisterFont,
+        fontWeight = FontWeight.Normal,
+        fontSize = 14.sp
+    ),
+    titleLarge = TextStyle(
+        fontFamily = CloisterFont,
+        fontWeight = FontWeight.Bold,
+        fontSize = 22.sp
+    ),
+    labelMedium = TextStyle(
+        fontFamily = CloisterFont,
         fontWeight = FontWeight.Medium,
-        fontSize = 11.sp,
-        lineHeight = 16.sp,
-        letterSpacing = 0.5.sp
+        fontSize = 12.sp
     )
-    */
 )

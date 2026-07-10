@@ -5,12 +5,14 @@ import android.graphics.RenderEffect
 import android.graphics.Shader
 import android.os.Build
 import android.widget.Toast
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.ui.graphics.Path
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -34,7 +36,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ua.zxcode.sololevelingapp.R
 import ua.zxcode.sololevelingapp.data.local.db.AppDatabase
+import ua.zxcode.sololevelingapp.data.repository.impl.UserRepositoryImpl
 import ua.zxcode.sololevelingapp.data.repository.impl.QuestRepositoryImpl
+import ua.zxcode.sololevelingapp.data.local.entity.UserEntity
 import ua.zxcode.sololevelingapp.presentation.components.SoloLevelingBackground
 import kotlinx.coroutines.launch
 
@@ -49,7 +53,15 @@ fun HomeScreen() {
     val questRepository = remember(context) {
         QuestRepositoryImpl(AppDatabase.getInstance(context).questDao())
     }
+    val userRepository = remember(context) {
+        UserRepositoryImpl(AppDatabase.getInstance(context).userDao())
+    }
     val activeQuests by questRepository.observeAllQuests().collectAsState(initial = emptyList())
+    val userState by userRepository.observeUser().collectAsState(initial = null)
+
+    val currentLevel = userState?.currentLevel ?: 0
+    val currentXp = userState?.currentXp ?: 0
+    val xpToNextLevel = userState?.xpToNextLevel ?: 100
 
     var isProfileOpen by remember { mutableStateOf(false) }
     var isQuestSettingsOpen by remember { mutableStateOf(false) }
@@ -89,31 +101,73 @@ fun HomeScreen() {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // lvlbar займає весь простір
-                Box(modifier = Modifier.weight(1.3f).height(barHeight*1.3f)) {
-                    Image(
-                        painter = painterResource(id = R.drawable.lvlbar),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .graphicsLayer {
-                                renderEffect = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                                    RenderEffect.createBlurEffect(18f, 18f, Shader.TileMode.DECAL)
-                                        .asComposeRenderEffect()
-                                } else null
-                            },
-                        contentScale = ContentScale.FillBounds,
-                        colorFilter = ColorFilter.tint(
-                            Color(0xFF00E6F0),
-                            blendMode = androidx.compose.ui.graphics.BlendMode.SrcIn
+                    Box(modifier = Modifier.weight(1.3f).height(barHeight * 1.3f)) {
+                        // Background glow layer
+                        Image(
+                            painter = painterResource(id = R.drawable.lvlbar),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .graphicsLayer {
+                                    renderEffect = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                        RenderEffect.createBlurEffect(18f, 18f, Shader.TileMode.DECAL)
+                                            .asComposeRenderEffect()
+                                    } else null
+                                },
+                            contentScale = ContentScale.FillBounds,
+                            colorFilter = ColorFilter.tint(
+                                Color(0xFF00E6F0),
+                                blendMode = androidx.compose.ui.graphics.BlendMode.SrcIn
+                            )
                         )
-                    )
-                    Image(
-                        painter = painterResource(id = R.drawable.lvlbar),
-                        contentDescription = null,
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.FillBounds
-                    )
-                }
+                        // Foreground image layer
+                        Image(
+                            painter = painterResource(id = R.drawable.lvlbar),
+                            contentDescription = null,
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.FillBounds
+                        )
+
+                        // ── CUSTOM RENDERING OVER THE LEVEL BAR ──
+                        val percentage = if (xpToNextLevel > 0) (currentXp.toFloat() / xpToNextLevel).coerceIn(0f, 1f) else 0f
+                        val ticksToFill = (percentage * 10).toInt()
+
+                        Canvas(modifier = Modifier.fillMaxSize()) {
+                            val scaleX = size.width / 316f
+                            val scaleY = size.height / 62f
+                            val greenColor = Color(0xFF00FF33)
+
+                            // Boundaries of the 10 progress segments from vector coordinates (with small margins to look nice inside borders)
+                            val topX = floatArrayOf(54.17f, 80.83f, 104.83f, 128.83f, 152.83f, 176.83f, 200.83f, 224.83f, 248.83f, 272.83f, 280.83f)
+                            val bottomX = floatArrayOf(54.17f, 75.5f, 99.5f, 123.5f, 147.5f, 171.5f, 195.5f, 219.5f, 243.5f, 267.5f, 280.83f)
+
+                            for (i in 0 until ticksToFill) {
+                                val path = Path().apply {
+                                    // Add minor inner margins (1.2f scaleX/scaleY) to keep the fill inside the vector boundaries
+                                    moveTo(topX[i] * scaleX + 1.2f * scaleX, 22.0f * scaleY)
+                                    lineTo(topX[i+1] * scaleX - 1.2f * scaleX, 22.0f * scaleY)
+                                    lineTo(bottomX[i+1] * scaleX - 1.2f * scaleX, 39.5f * scaleY)
+                                    lineTo(bottomX[i] * scaleX + 1.2f * scaleX, 39.5f * scaleY)
+                                    close()
+                                }
+                                drawPath(path, color = greenColor)
+                            }
+                        }
+
+                        // Use BiasAlignment to center the level number text exactly at the octagon's geometric center (9.758% from start)
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = androidx.compose.ui.BiasAlignment(horizontalBias = -0.84f, verticalBias = 0f)
+                        ) {
+                            Text(
+                                text = currentLevel.toString(),
+                                color = Color.White,
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
 
                 // profilebtn — строго 44×44
                 Box(
@@ -336,6 +390,68 @@ fun HomeScreen() {
                                             questRepository.updateQuest(
                                                 quest.copy(isCompleted = newCompleted, progress = newProgress)
                                             )
+                                            if (newCompleted) {
+                                                val xpGain = if (quest.isPenalty) 15 else 10
+                                                val user = userRepository.getUser()
+                                                if (user != null) {
+                                                    var newXp = user.currentXp + xpGain
+                                                    var newLvl = user.currentLevel
+                                                    var nextLvlThreshold = user.xpToNextLevel
+                                                    while (newXp >= nextLvlThreshold) {
+                                                        newXp -= nextLvlThreshold
+                                                        newLvl += 1
+                                                        nextLvlThreshold = 100 + 10 * newLvl
+                                                    }
+                                                    userRepository.updateUser(
+                                                        user.copy(
+                                                            currentLevel = newLvl,
+                                                            currentXp = newXp,
+                                                            xpToNextLevel = nextLvlThreshold
+                                                        )
+                                                    )
+                                                } else {
+                                                    // Initialize default if null
+                                                    var newXp = xpGain
+                                                    var newLvl = 0
+                                                    var nextLvlThreshold = 100 + 10 * newLvl
+                                                    if (newXp >= nextLvlThreshold) {
+                                                        newXp -= nextLvlThreshold
+                                                        newLvl = 1
+                                                        nextLvlThreshold = 100 + 10 * newLvl
+                                                    }
+                                                    userRepository.insertUser(
+                                                        UserEntity(
+                                                            nickname = "Сон Джин Ву",
+                                                            currentLevel = newLvl,
+                                                            currentXp = newXp,
+                                                            xpToNextLevel = nextLvlThreshold
+                                                        )
+                                                    )
+                                                }
+                                            } else {
+                                                // If uncompleted, subtract XP
+                                                val xpLoss = if (quest.isPenalty) 15 else 10
+                                                val user = userRepository.getUser()
+                                                if (user != null) {
+                                                    var newXp = user.currentXp - xpLoss
+                                                    var newLvl = user.currentLevel
+                                                    var nextLvlThreshold = user.xpToNextLevel
+                                                    while (newXp < 0 && newLvl > 0) {
+                                                        newLvl -= 1
+                                                        val prevThreshold = 100 + 10 * newLvl
+                                                        newXp += prevThreshold
+                                                        nextLvlThreshold = prevThreshold
+                                                    }
+                                                    if (newXp < 0) newXp = 0
+                                                    userRepository.updateUser(
+                                                        user.copy(
+                                                            currentLevel = newLvl,
+                                                            currentXp = newXp,
+                                                            xpToNextLevel = nextLvlThreshold
+                                                        )
+                                                    )
+                                                }
+                                            }
                                         }
                                     },
                                 contentScale = ContentScale.Fit

@@ -510,7 +510,9 @@ fun QuestSettingsOverlay(
                                                         category = dbCategory,
                                                         target = target,
                                                         progress = newProgress,
-                                                        isCompleted = if (target != existing.target) false else existing.isCompleted
+                                                        isCompleted = if (target != existing.target) false else existing.isCompleted,
+                                                        isPenalty = if (target != existing.target) false else existing.isPenalty,
+                                                        originalTarget = target
                                                     )
                                                 )
                                                 Toast.makeText(context, "Квест оновлено!", Toast.LENGTH_SHORT).show()
@@ -523,7 +525,9 @@ fun QuestSettingsOverlay(
                                                         isCompleted = false,
                                                         category = dbCategory,
                                                         progress = 0,
-                                                        target = target
+                                                        target = target,
+                                                        isPenalty = false,
+                                                        originalTarget = target
                                                     )
                                                 )
                                                 Toast.makeText(context, "Квест збережено!", Toast.LENGTH_SHORT).show()
