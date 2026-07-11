@@ -24,7 +24,11 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.ui.platform.LocalContext
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.health.connect.client.PermissionController
 import kotlinx.coroutines.launch
+import ua.zxcode.sololevelingapp.core.health.HealthConnectManager
 import ua.zxcode.sololevelingapp.data.local.db.AppDatabase
 import ua.zxcode.sololevelingapp.data.local.entity.UserEntity
 import ua.zxcode.sololevelingapp.data.repository.impl.UserRepositoryImpl
@@ -47,6 +51,26 @@ fun ProfileOverlay(
     }
     
     val userState by userRepository.observeUser().collectAsState(initial = null)
+    
+    val healthConnectManager = remember(context) { HealthConnectManager(context) }
+    var hasHealthConnectPermission by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        hasHealthConnectPermission = healthConnectManager.hasAllPermissions()
+    }
+
+    val requestPermissionsLauncher = rememberLauncherForActivityResult(
+        contract = PermissionController.createRequestPermissionResultContract()
+    ) { grantedSet ->
+        coroutineScope.launch {
+            hasHealthConnectPermission = grantedSet.containsAll(healthConnectManager.permissions)
+            if (hasHealthConnectPermission) {
+                Toast.makeText(context, "Health Connect підключено!", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(context, "Потрібно надати дозволи в Health Connect", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
 
     var username by remember { mutableStateOf("Сон Джин Ву") }
     var isEditing by remember { mutableStateOf(false) }
@@ -447,6 +471,26 @@ fun ProfileOverlay(
                                 indication = null
                             ) {
                                 onQuestSettingsClick()
+                            }
+                    )
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    Text(
+                        text = if (hasHealthConnectPermission) "[ Health Connect: Активно ]" else "[ Підключити Health Connect ]",
+                        color = if (hasHealthConnectPermission) Color(0xFF99FF99) else Color(0xFFB0E0E6),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null
+                            ) {
+                                if (!hasHealthConnectPermission) {
+                                    requestPermissionsLauncher.launch(healthConnectManager.permissions)
+                                } else {
+                                    Toast.makeText(context, "Health Connect вже налаштовано", Toast.LENGTH_SHORT).show()
+                                }
                             }
                     )
 
