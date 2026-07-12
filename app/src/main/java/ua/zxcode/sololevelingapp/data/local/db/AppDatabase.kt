@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import ua.zxcode.sololevelingapp.data.local.dao.*
 import ua.zxcode.sololevelingapp.data.local.entity.*
 
@@ -15,7 +17,7 @@ import ua.zxcode.sololevelingapp.data.local.entity.*
         QuestEntity::class,
         AchievementEntity::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -28,6 +30,14 @@ abstract class AppDatabase : RoomDatabase() {
 
     companion object {
         private const val DATABASE_NAME = "solo_leveling.db"
+
+        // Міграція 4→5: додаємо поля для відстеження стану щоденного скиду
+        private val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE user ADD COLUMN lastResetDate TEXT NOT NULL DEFAULT ''")
+                database.execSQL("ALTER TABLE user ADD COLUMN hadPenaltyYesterday INTEGER NOT NULL DEFAULT 0")
+            }
+        }
 
         @Volatile
         private var INSTANCE: AppDatabase? = null
@@ -44,8 +54,8 @@ abstract class AppDatabase : RoomDatabase() {
                 AppDatabase::class.java,
                 DATABASE_NAME
             )
-                .fallbackToDestructiveMigration() // замінити на Migration при production
+                .addMigrations(MIGRATION_4_5)
                 .build()
         }
     }
-}
+}

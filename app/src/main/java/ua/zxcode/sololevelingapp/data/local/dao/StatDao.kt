@@ -16,10 +16,10 @@ interface StatDao {
     @Query("SELECT * FROM stats WHERE id = :statId")
     suspend fun getStat(statId: String): StatEntity?
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertStat(stat: StatEntity)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertStats(stats: List<StatEntity>)
 
     @Update

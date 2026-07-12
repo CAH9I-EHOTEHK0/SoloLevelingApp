@@ -15,6 +15,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asComposeRenderEffect
 import androidx.compose.ui.graphics.graphicsLayer
@@ -53,7 +54,9 @@ fun AchievementsScreen() {
         modifier = Modifier
             .fillMaxSize()
             .background(
-                color = Color(0xFF141C2B)
+                brush = Brush.verticalGradient(
+                    colors = listOf(Color(0xFF141C2B), Color(0xFF120A1F))
+                )
             ),
         contentAlignment = Alignment.Center
     ) {
