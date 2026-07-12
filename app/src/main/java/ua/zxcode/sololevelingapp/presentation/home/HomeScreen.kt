@@ -298,7 +298,7 @@ fun HomeScreen() {
 
                     // Текст поверх рамки
                     Text(
-                        text = "QUEST INFO",
+                        text = "КВЕСТИ",
                         color = Color(0xFFB0E0E6),
                         fontSize = 18.sp,
                     )
@@ -533,7 +533,7 @@ fun HomeScreen() {
 
                 // Червоний текст попередження
                 Text(
-                    text = "WARNING: Failure to complete the daily quest will result in an appropriate penalty.",
+                    text = "УВАГА: Невиконання щоденного квесту призведе до відповідного покарання.",
                     color = Color(0xFFFF0033), // Яскраво-червоний під Solo Leveling стайл
                     fontSize = 13.sp,
                     textAlign = TextAlign.Start,

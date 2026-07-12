@@ -26,6 +26,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -70,7 +71,6 @@ fun QuestSettingsOverlay(
     var currentScreen by remember { mutableStateOf(QuestSettingsScreen.LIST) }
     var editingQuest by remember { mutableStateOf<QuestEntity?>(null) }
 
-    // New/Edit form inputs
     var selectedCategory by remember { mutableStateOf(QuestCategory.READING) }
     var bookTitle by remember { mutableStateOf("") }
     var readingPages by remember { mutableStateOf("15") }
@@ -85,7 +85,7 @@ fun QuestSettingsOverlay(
     var exerciseSearchQuery by remember { mutableStateOf("") }
     var isExerciseDropdownExpanded by remember { mutableStateOf(false) }
 
-    // When entering EDIT mode, populate fields from the selected quest
+    // Prepopulate form fields for editing
     fun enterEditMode(quest: QuestEntity) {
         editingQuest = quest
         when (quest.category) {
@@ -108,7 +108,6 @@ fun QuestSettingsOverlay(
                 selectedCategory = QuestCategory.PHYSICAL
                 physicalExercise = quest.title
                 exerciseSearchQuery = quest.title
-                // target = sets * reps, so show just the target and 1 set
                 physicalSets = "1"
                 physicalReps = quest.target.toString()
             }
@@ -164,47 +163,53 @@ fun QuestSettingsOverlay(
                     modifier = Modifier.fillMaxSize()
                 ) {
                     // ─── Header ───────────────────────────────────────────────
-                    Row(
+                    Text(
+                        text = when (currentScreen) {
+                            QuestSettingsScreen.LIST -> "НАЛАШТУВАННЯ КВЕСТІВ"
+                            QuestSettingsScreen.ADD  -> "НОВИЙ КВЕСТ"
+                            QuestSettingsScreen.EDIT -> "РЕДАГУВАТИ КВЕСТ"
+                        },
+                        color = Color(0xFF00E6F0),
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = when (currentScreen) {
-                                QuestSettingsScreen.LIST -> "НАЛАШТУВАННЯ КВЕСТІВ"
-                                QuestSettingsScreen.ADD  -> "НОВИЙ КВЕСТ"
-                                QuestSettingsScreen.EDIT -> "РЕДАГУВАТИ КВЕСТ"
-                            },
-                            color = Color(0xFF00E6F0),
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        if (currentScreen == QuestSettingsScreen.LIST) {
-                            // "+" button to add a new quest
-                            Box(
-                                modifier = Modifier
-                                    .border(1.dp, Color(0xFF00FF66), RoundedCornerShape(8.dp))
-                                    .background(Color(0xFF00FF66).copy(alpha = 0.1f), RoundedCornerShape(8.dp))
-                                    .clickable(
-                                        interactionSource = remember { MutableInteractionSource() },
-                                        indication = null
-                                    ) {
-                                        resetForm()
-                                        currentScreen = QuestSettingsScreen.ADD
-                                    }
-                                    .padding(horizontal = 12.dp, vertical = 6.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(
-                                        Icons.Default.Add,
-                                        contentDescription = "Додати квест",
-                                        tint = Color(0xFF00FF66),
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text("Додати", color = Color(0xFF00FF66), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                        textAlign = TextAlign.Center
+                    )
+
+                    if (currentScreen == QuestSettingsScreen.LIST) {
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        // "+" button to add a new quest — full-width row
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .border(1.dp, Color(0xFF00FF66), RoundedCornerShape(10.dp))
+                                .background(Color(0xFF00FF66).copy(alpha = 0.08f), RoundedCornerShape(10.dp))
+                                .clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = null
+                                ) {
+                                    resetForm()
+                                    currentScreen = QuestSettingsScreen.ADD
                                 }
+                                .padding(vertical = 10.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    Icons.Default.Add,
+                                    contentDescription = "Додати квест",
+                                    tint = Color(0xFF00FF66),
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    "ДОДАТИ КВЕСТ",
+                                    color = Color(0xFF00FF66),
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = 1.sp
+                                )
                             }
                         }
                     }
@@ -538,7 +543,11 @@ fun QuestSettingsOverlay(
                                             currentScreen = QuestSettingsScreen.LIST
                                         }
                                     },
-                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00FF66).copy(alpha = 0.2f)),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color(0xFF00FF66).copy(alpha = 0.08f),
+                                        contentColor = Color(0xFF00FF66)
+                                    ),
+                                    shape = RoundedCornerShape(8.dp),
                                     contentPadding = PaddingValues(vertical = 12.dp, horizontal = 8.dp),
                                     modifier = Modifier
                                         .weight(1.2f)

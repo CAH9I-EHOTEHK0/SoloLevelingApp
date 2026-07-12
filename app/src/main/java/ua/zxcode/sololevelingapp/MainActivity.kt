@@ -32,12 +32,10 @@ class MainActivity : ComponentActivity() {
             window.isNavigationBarContrastEnforced = false
         }
 
-        // Request runtime permission for notifications on Android 13+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 101)
         }
 
-        // Schedule all daily workers
         scheduleAllWorkers(this)
 
         setContent {
@@ -47,13 +45,12 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    // Schedule background synchronization and notifications
     private fun scheduleAllWorkers(context: Context) {
         val workManager = WorkManager.getInstance(context)
 
-        // 1. MidnightResetWorker — кожен день о 00:00
-        val midnightRequest = PeriodicWorkRequestBuilder<MidnightResetWorker>(
-            24, TimeUnit.HOURS
-        )
+        // Midnight Reset (00:00)
+        val midnightRequest = PeriodicWorkRequestBuilder<MidnightResetWorker>(24, TimeUnit.HOURS)
             .setInitialDelay(delayToNextHour(hour = 0, minute = 0), TimeUnit.MILLISECONDS)
             .addTag("MidnightResetTag")
             .build()
@@ -64,10 +61,8 @@ class MainActivity : ComponentActivity() {
             midnightRequest
         )
 
-        // 2. MorningNotifyWorker — кожен день о 08:00
-        val morningRequest = PeriodicWorkRequestBuilder<MorningNotifyWorker>(
-            24, TimeUnit.HOURS
-        )
+        // Morning Notification (08:00)
+        val morningRequest = PeriodicWorkRequestBuilder<MorningNotifyWorker>(24, TimeUnit.HOURS)
             .setInitialDelay(delayToNextHour(hour = 8, minute = 0), TimeUnit.MILLISECONDS)
             .addTag("MorningNotifyTag")
             .build()
@@ -78,10 +73,8 @@ class MainActivity : ComponentActivity() {
             morningRequest
         )
 
-        // 3. EveningReminderWorker — кожен день о 19:00
-        val eveningRequest = PeriodicWorkRequestBuilder<EveningReminderWorker>(
-            24, TimeUnit.HOURS
-        )
+        // Evening Reminder (19:00)
+        val eveningRequest = PeriodicWorkRequestBuilder<EveningReminderWorker>(24, TimeUnit.HOURS)
             .setInitialDelay(delayToNextHour(hour = 19, minute = 0), TimeUnit.MILLISECONDS)
             .addTag("EveningReminderTag")
             .build()
@@ -93,10 +86,7 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-    /**
-     * Розраховує затримку в мілісекундах до наступного настання вказаного часу доби.
-     * Якщо вказаний час вже минув сьогодні — повертає затримку до завтрашнього.
-     */
+    // Calculates delay until the next occurrence of the specified hour
     private fun delayToNextHour(hour: Int, minute: Int): Long {
         val now = Calendar.getInstance()
         val target = Calendar.getInstance().apply {
@@ -105,10 +95,10 @@ class MainActivity : ComponentActivity() {
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
         }
-        // Якщо час вже минув — переносимо на завтра
         if (target.timeInMillis <= now.timeInMillis) {
             target.add(Calendar.DAY_OF_YEAR, 1)
         }
         return target.timeInMillis - now.timeInMillis
     }
-}
+}
+

@@ -394,7 +394,7 @@ fun ProfileOverlay(
                                     )
                             ) {
                                 Text(
-                                    text = "MALE",
+                                    text = "Чоловік",
                                     color = if (selectedGender == "Male") Color(0xFF00E6F0) else Color.Gray,
                                     fontWeight = if (selectedGender == "Male") FontWeight.Bold else FontWeight.Normal,
                                     fontSize = 14.sp
@@ -419,7 +419,7 @@ fun ProfileOverlay(
                                     )
                             ) {
                                 Text(
-                                    text = "FEMALE",
+                                    text = "Жінка",
                                     color = if (selectedGender == "Female") Color(0xFF00E6F0) else Color.Gray,
                                     fontWeight = if (selectedGender == "Female") FontWeight.Bold else FontWeight.Normal,
                                     fontSize = 14.sp

@@ -74,14 +74,11 @@ fun StatsScreen() {
     val healthConnectManager = remember(context) { HealthConnectManager(context) }
     var hasHealthConnectPermission by remember { mutableStateOf(false) }
 
-    // List of stats from Room database
     val localStats by statsRepository.observeAllStats().collectAsState(initial = emptyList())
 
-    // Popups/dialog states
     var selectedStatForDetails by remember { mutableStateOf<StatEntity?>(null) }
     var isManualLogOpen by remember { mutableStateOf<StatEntity?>(null) }
 
-    // Use the Health Connect SDK's own permission dialog
     val hcClient = remember(healthConnectManager) { healthConnectManager.healthConnectClient }
 
     val requestPermissionsLauncher = rememberLauncherForActivityResult(
@@ -97,7 +94,7 @@ fun StatsScreen() {
         }
     }
 
-    // Seed initial stats definition if missing
+    // Populate initial stats if database is empty
     LaunchedEffect(Unit) {
         coroutineScope.launch {
             val existing = statsRepository.observeAllStats().firstOrNull() ?: emptyList()
@@ -112,13 +109,11 @@ fun StatsScreen() {
                     )
                 )
             }
-
-            // Check permissions
             hasHealthConnectPermission = healthConnectManager.hasAllPermissions()
         }
     }
 
-    // Background sync from Health Connect if permissions are granted
+    // Fetch and sync daily values from Health Connect
     LaunchedEffect(hasHealthConnectPermission) {
         if (hasHealthConnectPermission) {
             coroutineScope.launch {
@@ -142,7 +137,6 @@ fun StatsScreen() {
                             val existing = statsRepository.observeStat(id).firstOrNull()
                             if (existing != null) {
                                 statsRepository.updateStat(existing.copy(lastValue = value))
-                                // Save a record today if none exists for today
                                 val todayStart = Instant.now().truncatedTo(ChronoUnit.DAYS).toEpochMilli()
                                 val todayEnd = Instant.now().toEpochMilli()
                                 val records = statsRepository.observeRecordsInRange(id, todayStart, todayEnd).firstOrNull() ?: emptyList()
@@ -186,14 +180,12 @@ fun StatsScreen() {
                 .padding(top = 100.dp, start = 16.dp, end = 16.dp, bottom = 80.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Stat list grid
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
                 modifier = Modifier.fillMaxSize(),
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Weight is highlighted at the top full-width, or just as standard item
                 val weightStat = localStats.find { it.id == "weight" }
                 val gridItems = localStats.filter { it.id != "weight" }
 
@@ -219,7 +211,6 @@ fun StatsScreen() {
             }
         }
 
-        // Overlay Graphic dialog for stat details
         selectedStatForDetails?.let { stat ->
             StatDetailsDialog(
                 stat = stat,
@@ -230,7 +221,6 @@ fun StatsScreen() {
             )
         }
 
-        // Manual log entry dialog
         isManualLogOpen?.let { stat ->
             ManualLogDialog(
                 stat = stat,
@@ -407,7 +397,7 @@ fun StatDetailsDialog(
 ) {
     val coroutineScope = rememberCoroutineScope()
     var selectedTab by remember { mutableStateOf("Дн") } // "Дн", "Тиж", "Міс"
-    var timeOffset by remember { mutableStateOf(0) } // 0 = current, 1 = previous period, etc.
+    var timeOffset by remember { mutableStateOf(0) }
     var historyRecords by remember { mutableStateOf<List<StatRecordEntity>>(emptyList()) }
 
     val neonColor = when (stat.id) {
@@ -419,12 +409,10 @@ fun StatDetailsDialog(
         else -> Color(0xFF00E6F0)
     }
 
-    // Reset offset when changing tabs
     LaunchedEffect(selectedTab) {
         timeOffset = 0
     }
 
-    // Refresh history based on tab, offset and permission status
     LaunchedEffect(selectedTab, timeOffset, hasHealthConnectPermission) {
         coroutineScope.launch {
             val days = when (selectedTab) {
@@ -434,11 +422,12 @@ fun StatDetailsDialog(
                 else -> 7
             }
 
-            // 1. Always load local Room database records for this period first
+            // Load local Room database records for selected range first
             val offsetMillis = days.toLong() * timeOffset.toLong() * 24 * 60 * 60 * 1000
             val endTime = System.currentTimeMillis() - offsetMillis
             val startTime = endTime - (days.toLong() * 24 * 60 * 60 * 1000)
             val localList = statsRepository.observeRecordsInRange(stat.id, startTime, endTime).firstOrNull() ?: emptyList()
+
             
             val localGrouped = localList.groupBy {
                 java.time.LocalDate.ofInstant(Instant.ofEpochMilli(it.timestamp), java.time.ZoneId.systemDefault())
