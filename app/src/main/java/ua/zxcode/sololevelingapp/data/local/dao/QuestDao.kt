@@ -10,6 +10,9 @@ interface QuestDao {
     @Query("SELECT * FROM quests")
     fun observeAllQuests(): Flow<List<QuestEntity>>
 
+    @Query("SELECT * FROM quests")
+    suspend fun getAllQuestsSync(): List<QuestEntity>
+
     @Query("SELECT * FROM quests WHERE isCompleted = 0")
     fun observeActiveQuests(): Flow<List<QuestEntity>>
 
