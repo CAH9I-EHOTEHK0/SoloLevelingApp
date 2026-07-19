@@ -124,10 +124,15 @@ fun HomeScreen() {
         }
     }
 
-    // Trigger daily quest reset on app startup if a new day has arrived
-    LaunchedEffect(userState) {
-        if (userState != null) {
-            DailyResetManager.checkAndPerformReset(context)
+    // Trigger daily quest reset once per app launch when a new day has arrived.
+    // LaunchedEffect(Unit) ensures this runs only once, not on every userState change.
+    LaunchedEffect(Unit) {
+        // Wait until user data is loaded from the DB before checking the date
+        userRepository.observeUser().collect { user ->
+            if (user != null) {
+                DailyResetManager.checkAndPerformReset(context)
+                return@collect  // run only once — exit the flow after the first valid user
+            }
         }
     }
 
