@@ -506,7 +506,7 @@ fun HomeScreen() {
                                                              val achv = achievementRepository.getAchievementById(achievementId)
                                                              if (achv != null) {
                                                                  val addAmount = when (quest.category) {
-                                                                     "mental", "physical" -> quest.target.toLong()
+                                                                     "mental", "physical" -> (quest.target - quest.progress).coerceAtLeast(0).toLong()
                                                                      else -> 1L
                                                                  }
                                                                  val newProgressAchv = achv.progress + addAmount
@@ -553,7 +553,7 @@ fun HomeScreen() {
                                                             val achv = achievementRepository.getAchievementById(achievementId)
                                                             if (achv != null) {
                                                                 val subtractAmount = when (quest.category) {
-                                                                    "mental", "physical" -> quest.target.toLong()
+                                                                    "mental", "physical" -> quest.progress.toLong()
                                                                     else -> 1L
                                                                 }
                                                                 val newProgressAchv = (achv.progress - subtractAmount).coerceAtLeast(0L)
@@ -677,7 +677,7 @@ fun HomeScreen() {
                                     userRepository.updateUser(
                                         user.copy(
                                             currentLevel = newLvl,
-                                            currentXp = newXp,
+                                                            currentXp = newXp,
                                             xpToNextLevel = nextLvlThreshold
                                         )
                                     )
@@ -693,18 +693,19 @@ fun HomeScreen() {
                                     if (achievementId != null) {
                                         val achv = achievementRepository.getAchievementById(achievementId)
                                         if (achv != null) {
-                                            val stepUnit = when (quest.category) {
-                                                "mental", "physical" -> quest.target.toLong()
-                                                else -> 1L
-                                            }
-                                            // Додаємо прогрес, якщо квест щойно виконано
                                             var newAchvProgress = achv.progress
-                                            if (!oldCompleted && newCompleted) {
-                                                newAchvProgress += stepUnit
-                                            }
-                                            // Віднімаємо прогрес, якщо квест став невиконаним
-                                            else if (oldCompleted && !newCompleted) {
-                                                newAchvProgress = (newAchvProgress - stepUnit).coerceAtLeast(0L)
+                                            when (quest.category) {
+                                                "mental", "physical" -> {
+                                                    val delta = (newProgress - oldProgress).toLong()
+                                                    newAchvProgress = (achv.progress + delta).coerceAtLeast(0L)
+                                                }
+                                                else -> {
+                                                    if (!oldCompleted && newCompleted) {
+                                                        newAchvProgress += 1L
+                                                    } else if (oldCompleted && !newCompleted) {
+                                                        newAchvProgress = (newAchvProgress - 1L).coerceAtLeast(0L)
+                                                    }
+                                                }
                                             }
                                             val newRank = computeRank(achievementId, newAchvProgress)
                                             achievementRepository.updateAchievement(
