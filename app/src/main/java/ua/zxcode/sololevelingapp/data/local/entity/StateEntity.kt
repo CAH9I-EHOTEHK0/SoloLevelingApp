@@ -6,7 +6,7 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "stats")
 data class StatEntity(
     @PrimaryKey
-    val id: String,           // "weight", "pulse", "oxygen", "steps", "sleep"
+    val id: String,
     val title: String,
     val iconResId: Int,
     val lastValue: Float

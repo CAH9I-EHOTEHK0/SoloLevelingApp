@@ -19,7 +19,7 @@ data class CyberShape(
     var y: Float,
     val width: Float,
     val height: Float,
-    val shearX: Float, // Зсув по X для створення паралелепіпеда
+    val shearX: Float,
     val speed: Float,
     val alphaMax: Float
 )
@@ -33,7 +33,7 @@ fun SoloLevelingBackground(modifier: Modifier = Modifier) {
                 y = Random.nextFloat(),
                 width = Random.nextFloat() * 100f + 80f,
                 height = Random.nextFloat() * 50f + 30f,
-                shearX = Random.nextFloat() * 0.4f - 0.2f, // Коефіцієнт нахилу (оптимально від -0.2 до 0.2)
+                shearX = Random.nextFloat() * 0.4f - 0.2f,
                 speed = Random.nextFloat() * 0.0001f + 0.0005f,
                 alphaMax = Random.nextFloat() * 0.3f + 0.1f
             )
@@ -56,7 +56,6 @@ fun SoloLevelingBackground(modifier: Modifier = Modifier) {
         val strokeWidth = 2.dp.toPx()
         val neonColor = Color(0xFFB0E0E6)
 
-        // Використовуємо progress для постійного перемальовування кадрів
         val triggerAnimationFrame = progress
 
         shapes.forEach { shape ->
@@ -72,46 +71,37 @@ fun SoloLevelingBackground(modifier: Modifier = Modifier) {
             val canvasX = shape.x * size.width
             val canvasY = shape.y * size.height
 
-            // Виправлено: використовуємо об'єкт DrawTransform через лямбду і робимо зсув через інструмент інфляції матриці або вбудований метод зсуву контенту
             withTransform({
                 translate(left = canvasX, top = canvasY)
             }) {
-                // 3D паралелепіпед: 8 точок
                 val depth = shape.width * 0.5f
                 val perspectiveShift = 0.3f
-                
-                // Top face (z=0)
-                val p0 = Offset(0f, 0f) // верхня ліва передня
-                val p1 = Offset(shape.width, 0f) // верхня права передня
-                val p2 = Offset(shape.width + (shape.shearX * shape.height), shape.height) // верхня права задня
-                val p3 = Offset(shape.shearX * shape.height, shape.height) // верхня ліва задня
-                
-                // Bottom face (z=depth) з перспективним зсувом
-                val p4 = Offset(depth * perspectiveShift, depth * perspectiveShift) // нижня ліва передня
-                val p5 = Offset(shape.width + depth * perspectiveShift, depth * perspectiveShift) // нижня права передня
-                val p6 = Offset(shape.width + (shape.shearX * shape.height) + depth * perspectiveShift, shape.height + depth * perspectiveShift) // нижня права задня
-                val p7 = Offset(shape.shearX * shape.height + depth * perspectiveShift, shape.height + depth * perspectiveShift) // нижня ліва задня
-                
-                // 12 ребер паралелепіпеда
+
+                val p0 = Offset(0f, 0f)
+                val p1 = Offset(shape.width, 0f)
+                val p2 = Offset(shape.width + (shape.shearX * shape.height), shape.height)
+                val p3 = Offset(shape.shearX * shape.height, shape.height)
+
+                val p4 = Offset(depth * perspectiveShift, depth * perspectiveShift)
+                val p5 = Offset(shape.width + depth * perspectiveShift, depth * perspectiveShift)
+                val p6 = Offset(shape.width + (shape.shearX * shape.height) + depth * perspectiveShift, shape.height + depth * perspectiveShift)
+                val p7 = Offset(shape.shearX * shape.height + depth * perspectiveShift, shape.height + depth * perspectiveShift)
+
                 val edges = listOf(
-                    // Top face (4 ребра)
                     p0 to p1,
                     p1 to p2,
                     p2 to p3,
                     p3 to p0,
-                    // Bottom face (4 ребра)
                     p4 to p5,
                     p5 to p6,
                     p6 to p7,
                     p7 to p4,
-                    // Вертикальні ребра (4 ребра)
                     p0 to p4,
                     p1 to p5,
                     p2 to p6,
                     p3 to p7
                 )
-                
-                // Малюємо всі ребра
+
                 edges.forEach { (start, end) ->
                     drawLine(
                         color = neonColor.copy(alpha = shape.alphaMax),

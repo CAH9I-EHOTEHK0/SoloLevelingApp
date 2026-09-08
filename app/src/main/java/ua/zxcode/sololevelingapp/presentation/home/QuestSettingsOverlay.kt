@@ -48,11 +48,10 @@ enum class QuestCategory {
     READING, CODING, LANGUAGES, PHYSICAL
 }
 
-// Determines the screen shown inside QuestSettingsOverlay
 private enum class QuestSettingsScreen {
-    LIST,   // shows existing quests with edit/delete
-    ADD,    // new quest form
-    EDIT    // edit existing quest form
+    LIST,
+    ADD,
+    EDIT
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -162,7 +161,6 @@ fun QuestSettingsOverlay(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    // ─── Header ───────────────────────────────────────────────
                     Text(
                         text = when (currentScreen) {
                             QuestSettingsScreen.LIST -> "НАЛАШТУВАННЯ КВЕСТІВ"
@@ -179,7 +177,6 @@ fun QuestSettingsOverlay(
                     if (currentScreen == QuestSettingsScreen.LIST) {
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        // "+" button to add a new quest — full-width row
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -216,10 +213,8 @@ fun QuestSettingsOverlay(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // ─── Content ──────────────────────────────────────────────
                     when (currentScreen) {
 
-                        // ── LIST SCREEN ─────────────────────────────────────
                         QuestSettingsScreen.LIST -> {
                             if (allQuests.isEmpty()) {
                                 Box(
@@ -262,7 +257,6 @@ fun QuestSettingsOverlay(
                             }
                         }
 
-                        // ── ADD / EDIT SCREEN ────────────────────────────────
                         QuestSettingsScreen.ADD,
                         QuestSettingsScreen.EDIT -> {
                             // Category buttons
@@ -286,7 +280,6 @@ fun QuestSettingsOverlay(
 
                             Spacer(modifier = Modifier.height(16.dp))
 
-                            // Form fields
                             Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
                                 Column(
                                     modifier = Modifier
@@ -460,7 +453,6 @@ fun QuestSettingsOverlay(
 
                             Spacer(modifier = Modifier.height(16.dp))
 
-                            // Buttons row
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -524,7 +516,6 @@ fun QuestSettingsOverlay(
                                                 )
                                                 Toast.makeText(context, "Квест оновлено!", Toast.LENGTH_SHORT).show()
                                             } else {
-                                                // INSERT new quest
                                                 questRepository.insertQuest(
                                                     QuestEntity(
                                                         title = title,
@@ -579,7 +570,6 @@ fun QuestSettingsOverlay(
     }
 }
 
-// ─── Quest List Item ─────────────────────────────────────────────────────────
 @Composable
 fun QuestListItem(
     quest: QuestEntity,
@@ -596,7 +586,6 @@ fun QuestListItem(
             .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Category indicator stripe
         Box(
             modifier = Modifier
                 .width(3.dp)
@@ -614,7 +603,6 @@ fun QuestListItem(
 
         Spacer(modifier = Modifier.width(10.dp))
 
-        // Quest info
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = quest.title,
@@ -632,9 +620,7 @@ fun QuestListItem(
             )
         }
 
-        // Delete confirm or action icons
         if (showDeleteConfirm) {
-            // Confirm delete row
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("Видалити?", color = Color(0xFFFF3366), fontSize = 12.sp)
                 Spacer(modifier = Modifier.width(6.dp))
@@ -655,7 +641,6 @@ fun QuestListItem(
                 }
             }
         } else {
-            // Edit / Delete icon buttons
             IconButton(
                 onClick = onEdit,
                 modifier = Modifier.size(36.dp)
@@ -672,7 +657,6 @@ fun QuestListItem(
     }
 }
 
-// ─── Reusable helpers ────────────────────────────────────────────────────────
 @Composable
 fun CategoryButton(
     text: String,

@@ -45,7 +45,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    // Schedule background synchronization and notifications
     private fun scheduleAllWorkers(context: Context) {
         val workManager = WorkManager.getInstance(context)
 
@@ -61,7 +60,6 @@ class MainActivity : ComponentActivity() {
             midnightRequest
         )
 
-        // Morning Notification (08:00)
         val morningRequest = PeriodicWorkRequestBuilder<MorningNotifyWorker>(24, TimeUnit.HOURS)
             .setInitialDelay(delayToNextHour(hour = 8, minute = 0), TimeUnit.MILLISECONDS)
             .addTag("MorningNotifyTag")
@@ -73,7 +71,6 @@ class MainActivity : ComponentActivity() {
             morningRequest
         )
 
-        // Evening Reminder (19:00)
         val eveningRequest = PeriodicWorkRequestBuilder<EveningReminderWorker>(24, TimeUnit.HOURS)
             .setInitialDelay(delayToNextHour(hour = 19, minute = 0), TimeUnit.MILLISECONDS)
             .addTag("EveningReminderTag")
@@ -86,7 +83,6 @@ class MainActivity : ComponentActivity() {
         )
     }
 
-    // Calculates delay until the next occurrence of the specified hour
     private fun delayToNextHour(hour: Int, minute: Int): Long {
         val now = Calendar.getInstance()
         val target = Calendar.getInstance().apply {
@@ -101,4 +97,4 @@ class MainActivity : ComponentActivity() {
         return target.timeInMillis - now.timeInMillis
     }
 }
-
+

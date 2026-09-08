@@ -40,7 +40,6 @@ fun AchievementsScreen() {
     }
     val achievements by achievementRepository.observeAllAchievements().collectAsState(initial = emptyList())
 
-    // Seed default achievements if DB is empty
     LaunchedEffect(Unit) {
         coroutineScope.launch {
             val existing = achievementRepository.getAchievementById(AchievementIds.SYSTEM_ARCHITECT)
@@ -112,7 +111,6 @@ fun AchievementItem(achievement: AchievementEntity) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Rank badge
             Box(
                 modifier = Modifier
                     .background(
@@ -133,7 +131,6 @@ fun AchievementItem(achievement: AchievementEntity) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Icon with glow
             Box(
                 modifier = Modifier.size(56.dp),
                 contentAlignment = Alignment.Center
@@ -162,7 +159,6 @@ fun AchievementItem(achievement: AchievementEntity) {
 
             Spacer(modifier = Modifier.height(6.dp))
 
-            // Title
             Text(
                 text = achievement.title,
                 color = Color.White,
@@ -175,7 +171,6 @@ fun AchievementItem(achievement: AchievementEntity) {
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            // Progress text
             Text(
                 text = progressText(achievement),
                 color = rankColor.copy(alpha = 0.85f),

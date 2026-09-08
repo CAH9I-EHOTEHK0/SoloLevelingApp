@@ -25,8 +25,6 @@ class HealthConnectManager(private val context: Context) {
             null
         }
     }
-
-    // Typed permissions — used with HC permissionController
     val permissions = setOf(
         HealthPermission.getReadPermission(StepsRecord::class),
         HealthPermission.getReadPermission(HeartRateRecord::class),

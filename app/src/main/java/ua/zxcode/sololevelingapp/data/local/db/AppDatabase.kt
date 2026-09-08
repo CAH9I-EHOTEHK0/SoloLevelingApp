@@ -31,7 +31,6 @@ abstract class AppDatabase : RoomDatabase() {
     companion object {
         private const val DATABASE_NAME = "solo_leveling.db"
 
-        // Міграція 4→5: додаємо поля для відстеження стану щоденного скиду
         private val MIGRATION_4_5 = object : Migration(4, 5) {
             override fun migrate(database: SupportSQLiteDatabase) {
                 database.execSQL("ALTER TABLE user ADD COLUMN lastResetDate TEXT NOT NULL DEFAULT ''")
@@ -58,4 +57,4 @@ abstract class AppDatabase : RoomDatabase() {
                 .build()
         }
     }
-}
+}

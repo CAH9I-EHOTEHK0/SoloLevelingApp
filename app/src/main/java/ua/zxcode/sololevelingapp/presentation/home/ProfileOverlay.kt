@@ -80,7 +80,6 @@ fun ProfileOverlay(
     var birthDate by remember { mutableStateOf("12.05.2004") }
     var isSoundEnabled by remember { mutableStateOf(true) }
 
-    // Sync with database
     LaunchedEffect(userState) {
         userState?.let {
             username = it.nickname
@@ -135,7 +134,6 @@ fun ProfileOverlay(
     var selectedMonthIndex by remember { mutableStateOf(months.indexOf(birthDate.split(".")[1]).coerceAtLeast(0)) }
     var selectedYearIndex by remember { mutableStateOf(years.indexOf(birthDate.split(".")[2]).coerceAtLeast(0)) }
 
-    // Update wheel indexes when date changes from database
     LaunchedEffect(birthDate) {
         val parts = birthDate.split(".")
         if (parts.size == 3) {

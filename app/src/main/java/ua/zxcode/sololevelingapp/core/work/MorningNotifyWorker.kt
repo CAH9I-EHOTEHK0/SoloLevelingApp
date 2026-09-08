@@ -13,11 +13,6 @@ import kotlinx.coroutines.flow.firstOrNull
 import ua.zxcode.sololevelingapp.MainActivity
 import ua.zxcode.sololevelingapp.data.local.db.AppDatabase
 
-/**
- * Запускається щоранку о 08:00.
- * Якщо вчора нарахували штраф — показує спеціальне сповіщення про штраф.
- * Інакше — стандартне "нові квести" сповіщення.
- */
 class MorningNotifyWorker(
     private val context: Context,
     workerParams: WorkerParameters
@@ -41,13 +36,11 @@ class MorningNotifyWorker(
         if (allQuests.isEmpty()) return Result.success()
 
         if (user.hadPenaltyYesterday) {
-            // Вчора нарахований штраф
             sendNotification(
                 title = "⚠️ СИСТЕМА: Штраф Активовано!",
                 message = "Вчора ви не виконали всі щоденні квести та отримали штраф. Цілі квестів збільшено на 50%. Не відкладайте — виконайте квести сьогодні!"
             )
         } else {
-            // Звичайне вранішнє сповіщення
             sendNotification(
                 title = "⚔️ СИСТЕМА: Нові Щоденні Квести!",
                 message = "Новий день — нові можливості стати сильнішим! Відкрийте додаток і виконайте свої щоденні квести."

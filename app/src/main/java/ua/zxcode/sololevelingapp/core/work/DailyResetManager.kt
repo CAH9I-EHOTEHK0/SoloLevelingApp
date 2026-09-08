@@ -20,14 +20,12 @@ object DailyResetManager {
         val user = userDao.getUser() ?: return@withContext false
         val today = LocalDate.now().toString() // "yyyy-MM-dd"
 
-        // Якщо сьогодні вже скидали — виходимо
         if (user.lastResetDate == today) {
             return@withContext false
         }
 
         val allQuests = questDao.getAllQuestsSync()
 
-        // Перший запуск після встановлення або оновлення: ініціалізуємо дату сьогоднішнім числом без штрафу
         if (user.lastResetDate.isEmpty()) {
             userDao.updateUser(
                 user.copy(
@@ -38,14 +36,12 @@ object DailyResetManager {
             return@withContext false
         }
 
-        // Штраф нараховується, якщо є хоча б один невиконаний квест
         val uncompletedQuests = allQuests.filter { !it.isCompleted }
         val hadPenalty: Boolean
 
         if (allQuests.isEmpty()) {
             hadPenalty = false
         } else if (uncompletedQuests.isNotEmpty()) {
-            // ── ШТРАФ: є невиконані квести ──
             hadPenalty = true
             uncompletedQuests.forEach { quest ->
                 val newTarget = if (!quest.isPenalty) {
@@ -62,7 +58,6 @@ object DailyResetManager {
                     )
                 )
             }
-            // Скидаємо прогрес виконаних
             allQuests.filter { it.isCompleted }.forEach { quest ->
                 questDao.updateQuest(
                     quest.copy(
@@ -72,10 +67,8 @@ object DailyResetManager {
                 )
             }
         } else {
-            // ── УСПІХ: всі виконані ──
             hadPenalty = false
 
-            // Нараховуємо досягнення "ідеальний день"
             val achievementDao = database.achievementDao()
             val playersAchv = achievementDao.getAchievementById(AchievementIds.PLAYERS_IRL)
             if (playersAchv != null) {
@@ -90,7 +83,6 @@ object DailyResetManager {
                 )
             }
 
-            // Повний ресет на початкові цілі
             allQuests.forEach { quest ->
                 questDao.updateQuest(
                     quest.copy(
@@ -103,7 +95,6 @@ object DailyResetManager {
             }
         }
 
-        // Оновлюємо статус користувача
         userDao.updateUser(
             user.copy(
                 lastResetDate = today,

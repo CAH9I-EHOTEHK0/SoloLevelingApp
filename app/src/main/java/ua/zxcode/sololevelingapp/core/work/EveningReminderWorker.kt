@@ -13,11 +13,6 @@ import kotlinx.coroutines.flow.firstOrNull
 import ua.zxcode.sololevelingapp.MainActivity
 import ua.zxcode.sololevelingapp.data.local.db.AppDatabase
 
-/**
- * Запускається щовечора о 19:00.
- * Якщо є невиконані квести — надсилає нагадування про ризик штрафу.
- * Якщо всі квести виконані — нічого не робить.
- */
 class EveningReminderWorker(
     private val context: Context,
     workerParams: WorkerParameters
@@ -42,7 +37,6 @@ class EveningReminderWorker(
 
         val uncompletedQuests = allQuests.filter { !it.isCompleted }
 
-        // Сповіщення лише якщо є невиконані квести
         if (uncompletedQuests.isNotEmpty()) {
             val count = uncompletedQuests.size
             val questWord = when {

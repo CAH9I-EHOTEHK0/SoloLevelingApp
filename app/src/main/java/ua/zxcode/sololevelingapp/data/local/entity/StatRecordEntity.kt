@@ -21,6 +21,6 @@ data class StatRecordEntity(
     @PrimaryKey(autoGenerate = true)
     val recordId: Long = 0,
     val statId: String,
-    val value: Float,           // для кроків — дельта/сума; для сну — години
-    val timestamp: Long         // System.currentTimeMillis()
+    val value: Float,
+    val timestamp: Long
 )

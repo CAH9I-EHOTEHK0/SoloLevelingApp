@@ -94,7 +94,6 @@ fun StatsScreen() {
         }
     }
 
-    // Populate initial stats if database is empty
     LaunchedEffect(Unit) {
         coroutineScope.launch {
             val existing = statsRepository.observeAllStats().firstOrNull() ?: emptyList()
@@ -113,7 +112,6 @@ fun StatsScreen() {
         }
     }
 
-    // Fetch and sync daily values from Health Connect
     LaunchedEffect(hasHealthConnectPermission) {
         if (hasHealthConnectPermission) {
             coroutineScope.launch {
@@ -273,7 +271,6 @@ fun StatCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            // "+" Button to add manual logs
             IconButton(
                 onClick = { onAddClick() },
                 modifier = Modifier
@@ -422,7 +419,6 @@ fun StatDetailsDialog(
                 else -> 7
             }
 
-            // Load local Room database records for selected range first
             val offsetMillis = days.toLong() * timeOffset.toLong() * 24 * 60 * 60 * 1000
             val endTime = System.currentTimeMillis() - offsetMillis
             val startTime = endTime - (days.toLong() * 24 * 60 * 60 * 1000)
@@ -601,7 +597,6 @@ fun StatDetailsDialog(
                     .padding(horizontal = 20.dp, vertical = 12.dp)
                     .verticalScroll(rememberScrollState())
             ) {
-                // Header (Title & Close button)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
@@ -619,12 +614,11 @@ fun StatDetailsDialog(
                         letterSpacing = 1.sp
                     )
 
-                    Spacer(modifier = Modifier.width(48.dp)) // Equal spacing
+                    Spacer(modifier = Modifier.width(48.dp))
                 }
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                // Interactive paginated Date Label
                 val dateLabelText = remember(selectedTab, timeOffset) {
                     val targetLocalDate = java.time.LocalDate.now().minusDays(
                         when (selectedTab) {
@@ -697,7 +691,6 @@ fun StatDetailsDialog(
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                // Tab Selector (Day / Week / Month)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -730,7 +723,6 @@ fun StatDetailsDialog(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Primary Value Summary
                 val lastValText = when (stat.id) {
                     "steps" -> "${historyRecords.sumOf { it.value.toInt() }} кроків"
                     "pulse" -> if (historyRecords.isNotEmpty()) "${historyRecords.map { it.value.toInt() }.average().toInt()} уд/хв" else "—"
@@ -764,7 +756,6 @@ fun StatDetailsDialog(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Beautiful custom Canvas chart
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -792,7 +783,6 @@ fun StatDetailsDialog(
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                // Metrics / summary grid
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
@@ -809,7 +799,6 @@ fun StatDetailsDialog(
 
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        // Render extra dynamic statistics metrics
                         when (stat.id) {
                             "steps" -> {
                                 val totalSteps = historyRecords.sumOf { it.value.toInt() }
@@ -892,12 +881,10 @@ fun StatHistoryChart(records: List<StatRecordEntity>, neonColor: Color, statId: 
         else -> "%.1f".format(v)
     }
 
-    // How many x-labels to show
     val maxLabels = 6
     val labelStep = (records.size / maxLabels).coerceAtLeast(1)
 
     Column(modifier = Modifier.fillMaxSize()) {
-        // Tooltip row
         val sel = if (selectedIndex >= 0 && selectedIndex < records.size) records[selectedIndex] else null
         if (sel != null) {
             Row(
@@ -923,7 +910,6 @@ fun StatHistoryChart(records: List<StatRecordEntity>, neonColor: Color, statId: 
         }
 
         Row(modifier = Modifier.weight(1f)) {
-            // Y-axis labels
             Column(
                 modifier = Modifier
                     .width(40.dp)
@@ -937,7 +923,6 @@ fun StatHistoryChart(records: List<StatRecordEntity>, neonColor: Color, statId: 
 
             Spacer(modifier = Modifier.width(4.dp))
 
-            // Chart canvas
             Canvas(
                 modifier = Modifier
                     .weight(1f)
@@ -959,7 +944,6 @@ fun StatHistoryChart(records: List<StatRecordEntity>, neonColor: Color, statId: 
                 val barW = size.width / n
                 val chartH = size.height
 
-                // Horizontal grid lines
                 val gridAlpha = 0.12f
                 drawLine(Color.White.copy(alpha = gridAlpha), Offset(0f, 0f), Offset(size.width, 0f), strokeWidth = 1f)
                 drawLine(Color.White.copy(alpha = gridAlpha), Offset(0f, chartH / 2f), Offset(size.width, chartH / 2f), strokeWidth = 1f)
@@ -972,7 +956,6 @@ fun StatHistoryChart(records: List<StatRecordEntity>, neonColor: Color, statId: 
                     val right = (i + 1) * barW - barW * 0.1f
                     val top = chartH - barH
 
-                    // Bar gradient
                     drawRect(
                         brush = Brush.verticalGradient(
                             colors = listOf(
@@ -986,7 +969,6 @@ fun StatHistoryChart(records: List<StatRecordEntity>, neonColor: Color, statId: 
                         size = Size(right - left, barH)
                     )
 
-                    // Highlight selected bar with top cap line
                     if (i == selectedIndex) {
                         drawLine(
                             color = neonColor,
@@ -999,7 +981,6 @@ fun StatHistoryChart(records: List<StatRecordEntity>, neonColor: Color, statId: 
             }
         }
 
-        // X-axis labels
         Row(
             modifier = Modifier
                 .padding(start = 44.dp, top = 2.dp)
@@ -1112,7 +1093,6 @@ fun ManualLogDialog(
     )
 }
 
-// Utility stroke builder for Compose border
 private fun borderStroke(width: androidx.compose.ui.unit.Dp, color: Color) =
     androidx.compose.foundation.BorderStroke(width, color)
 

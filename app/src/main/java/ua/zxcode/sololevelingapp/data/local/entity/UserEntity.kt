@@ -14,6 +14,6 @@ data class UserEntity(
     val gender: String = "Male",
     val birthDate: String = "12.05.2004",
     val isSoundEnabled: Boolean = true,
-    val lastResetDate: String = "",        // "yyyy-MM-dd" дата останнього скиду
-    val hadPenaltyYesterday: Boolean = false  // чи нараховувався штраф вчора
-)
+    val lastResetDate: String = "",        // "yyyy-MM-dd"
+    val hadPenaltyYesterday: Boolean = false
+)

@@ -6,12 +6,9 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface StatRecordDao {
-
-    // Всі записи для конкретної характеристики, відсортовані ASC для графіків
     @Query("SELECT * FROM stat_records WHERE statId = :statId ORDER BY timestamp ASC")
     fun observeRecordsForStat(statId: String): Flow<List<StatRecordEntity>>
 
-    // Останні N записів для графіка (наприклад, 7 або 30 днів)
     @Query("""
         SELECT * FROM stat_records 
         WHERE statId = :statId 
@@ -20,7 +17,6 @@ interface StatRecordDao {
     """)
     fun observeLatestRecordsForStat(statId: String, limit: Int): Flow<List<StatRecordEntity>>
 
-    // Записи в діапазоні часу
     @Query("""
         SELECT * FROM stat_records 
         WHERE statId = :statId 

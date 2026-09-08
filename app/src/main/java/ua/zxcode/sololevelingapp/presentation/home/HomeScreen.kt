@@ -116,7 +116,6 @@ fun HomeScreen() {
     val activeQuests by questRepository.observeAllQuests().collectAsState(initial = emptyList())
     val userState by userRepository.observeUser().collectAsState(initial = null)
 
-    // Seed achievements on first launch
     LaunchedEffect(Unit) {
         val existing = achievementRepository.getAchievementById(AchievementIds.SYSTEM_ARCHITECT)
         if (existing == null) {
@@ -124,14 +123,11 @@ fun HomeScreen() {
         }
     }
 
-    // Trigger daily quest reset once per app launch when a new day has arrived.
-    // LaunchedEffect(Unit) ensures this runs only once, not on every userState change.
     LaunchedEffect(Unit) {
-        // Wait until user data is loaded from the DB before checking the date
         userRepository.observeUser().collect { user ->
             if (user != null) {
                 DailyResetManager.checkAndPerformReset(context)
-                return@collect  // run only once — exit the flow after the first valid user
+                return@collect
             }
         }
     }
@@ -163,7 +159,6 @@ fun HomeScreen() {
     ) {
         SoloLevelingBackground()
 
-        // Header притиснутий до топу
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -182,9 +177,7 @@ fun HomeScreen() {
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // lvlbar займає весь простір
                     Box(modifier = Modifier.weight(1.3f).height(barHeight * 1.3f)) {
-                        // Background glow layer
                         Image(
                             painter = painterResource(id = R.drawable.lvlbar),
                             contentDescription = null,
@@ -202,7 +195,6 @@ fun HomeScreen() {
                                 blendMode = androidx.compose.ui.graphics.BlendMode.SrcIn
                             )
                         )
-                        // Foreground image layer
                         Image(
                             painter = painterResource(id = R.drawable.lvlbar),
                             contentDescription = null,
@@ -210,7 +202,6 @@ fun HomeScreen() {
                             contentScale = ContentScale.FillBounds
                         )
 
-                        // ── CUSTOM RENDERING OVER THE LEVEL BAR ──
                         val percentage = if (xpToNextLevel > 0) (currentXp.toFloat() / xpToNextLevel).coerceIn(0f, 1f) else 0f
                         val ticksToFill = (percentage * 10).toInt()
 
@@ -219,13 +210,11 @@ fun HomeScreen() {
                             val scaleY = size.height / 62f
                             val greenColor = Color(0xFF00FF33)
 
-                            // Boundaries of the 10 progress segments from vector coordinates (with small margins to look nice inside borders)
                             val topX = floatArrayOf(54.17f, 80.83f, 104.83f, 128.83f, 152.83f, 176.83f, 200.83f, 224.83f, 248.83f, 272.83f, 280.83f)
                             val bottomX = floatArrayOf(54.17f, 75.5f, 99.5f, 123.5f, 147.5f, 171.5f, 195.5f, 219.5f, 243.5f, 267.5f, 280.83f)
 
                             for (i in 0 until ticksToFill) {
                                 val path = Path().apply {
-                                    // Add minor inner margins (1.2f scaleX/scaleY) to keep the fill inside the vector boundaries
                                     moveTo(topX[i] * scaleX + 1.2f * scaleX, 22.0f * scaleY)
                                     lineTo(topX[i+1] * scaleX - 1.2f * scaleX, 22.0f * scaleY)
                                     lineTo(bottomX[i+1] * scaleX - 1.2f * scaleX, 39.5f * scaleY)
@@ -236,7 +225,6 @@ fun HomeScreen() {
                             }
                         }
 
-                        // Use BiasAlignment to center the level number text exactly at the octagon's geometric center (9.758% from start)
                         Box(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = androidx.compose.ui.BiasAlignment(horizontalBias = -0.84f, verticalBias = 0f)
@@ -251,7 +239,6 @@ fun HomeScreen() {
                         }
                     }
 
-                // profilebtn — строго 44×44
                 Box(
                     modifier = Modifier
                         .size(btnSize)
@@ -259,7 +246,7 @@ fun HomeScreen() {
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null
                         ) {
-                            isProfileOpen = true // Відкриваємо оверлей при кліку!
+                            isProfileOpen = true
                         },
                     contentAlignment = Alignment.Center
                 ) {
@@ -292,7 +279,6 @@ fun HomeScreen() {
             }
         }
 
-        // ── Overlays (поза Row, щоб не впливати на лейаут хедера) ──────────
         if (isProfileOpen) {
             ProfileOverlay(
                 onDismiss = { isProfileOpen = false },
@@ -309,7 +295,6 @@ fun HomeScreen() {
             )
         }
 
-        //квест бокс.
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -318,7 +303,6 @@ fun HomeScreen() {
                 .padding(top = 136.dp),
             contentAlignment = Alignment.Center
         ) {
-            // 1. Основна велика рамка квест-бокса
             Image(
                 painter = painterResource(id = R.drawable.questlistframe),
                 contentDescription = null,
@@ -326,7 +310,6 @@ fun HomeScreen() {
                 contentScale = ContentScale.FillBounds
             )
 
-            // Контент всередині рамки
             Column(
                 modifier = Modifier
                     .size(width = 364.dp, height = 586.dp)
@@ -334,14 +317,12 @@ fun HomeScreen() {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
 
-                // 2. ВЕРХНЯ ЧАСТИНА: Знак оклику + QUEST INFO + Хрестик
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 12.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    // Іконка знака оклику зліва
                     Image(
                         painter = painterResource(id = R.drawable.questlistinfo),
                         contentDescription = "Quest Info Icon",
@@ -353,7 +334,6 @@ fun HomeScreen() {
                             ) { showMessage() }
                             .align(Alignment.CenterStart)
                     )
-                    // Фонова рамка
                     Image(
                         painter = painterResource(id = R.drawable.questlistinfoframe),
                         contentDescription = null,
@@ -363,29 +343,26 @@ fun HomeScreen() {
                         contentScale = ContentScale.FillBounds
                     )
 
-                    // Текст поверх рамки
                     Text(
                         text = "КВЕСТИ",
                         color = Color(0xFFB0E0E6),
                         fontSize = 18.sp,
                     )
 
-                    // Кнопка закриття (хрестик) справа
                     Image(
                         painter = painterResource(id = R.drawable.exitbtn),
                         contentDescription = "Close",
                         modifier = Modifier
-                            .size(26.dp) // Або підгоняй під розмір іконки
+                            .size(26.dp)
                             .align(Alignment.CenterEnd)
                             .clickable { closeApp(context) }
                     )
                 }
 
-                // 4. МІСЦЕ ДЛЯ ТВОЇХ КВЕСТІВ (Push-ups, Book, Code)
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .weight(1f) // Займає весь вільний простір між лінією та варнінгом
+                        .weight(1f)
                         .padding(vertical = 12.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
@@ -396,7 +373,6 @@ fun HomeScreen() {
                                 .height(54.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            // 1. Category Icon with Neon Glow
                             Box(
                                 modifier = Modifier
                                     .size(44.dp)
@@ -408,8 +384,7 @@ fun HomeScreen() {
                                     "physical" -> R.drawable.questicogym
                                     else -> R.drawable.questicobook
                                 }
-                                
-                                // Glow Layer
+
                                 Image(
                                     painter = painterResource(id = iconRes),
                                     contentDescription = null,
@@ -426,7 +401,6 @@ fun HomeScreen() {
                                         blendMode = androidx.compose.ui.graphics.BlendMode.SrcIn
                                     )
                                 )
-                                // Sharp original layer
                                 Image(
                                     painter = painterResource(id = iconRes),
                                     contentDescription = null,
@@ -434,7 +408,6 @@ fun HomeScreen() {
                                 )
                             }
 
-                            // 2. Title of the Quest
                             Text(
                                 text = quest.title,
                                 color = Color.White,
@@ -443,7 +416,6 @@ fun HomeScreen() {
                                 modifier = Modifier.weight(1f)
                             )
 
-                            // 3. Ratio [progress/target]
                             Text(
                                 text = "[${quest.progress}/${quest.target}]",
                                 color = Color(0xFFB0E0E6),
@@ -454,7 +426,6 @@ fun HomeScreen() {
 
                             Spacer(modifier = Modifier.width(8.dp))
 
-                            // 4. Clickable Custom Checkbox Box (Normal Click = Complete/Uncheck, Long Click = Edit Progress)
                             Image(
                                 painter = painterResource(
                                     id = if (quest.isCompleted) R.drawable.questboxcompletedcheck else R.drawable.questbox
@@ -476,7 +447,6 @@ fun HomeScreen() {
                                                 val user = userRepository.getUser()
                                                 if (user != null) {
                                                     if (newCompleted) {
-                                                        // Complete: grant base XP
                                                         val xpGain = calculateXpGain(quest, quest.progress, newProgress, user.currentLevel)
                                                         var newXp = user.currentXp + xpGain
                                                         var newLvl = user.currentLevel
@@ -494,7 +464,6 @@ fun HomeScreen() {
                                                             )
                                                         )
 
-                                                        // Update Achievement progress
                                                         val achievementId = when (quest.category) {
                                                             "coding"   -> AchievementIds.SYSTEM_ARCHITECT
                                                             "mental"   -> AchievementIds.MONARCH_LIBRARY
@@ -521,7 +490,6 @@ fun HomeScreen() {
                                                              }
                                                         }
                                                     } else {
-                                                        // Uncheck: subtract all granted XP for this quest
                                                         val xpLoss = calculateXpLoss(quest, user.currentLevel)
                                                         var newXp = user.currentXp - xpLoss
                                                         var newLvl = user.currentLevel
@@ -541,7 +509,6 @@ fun HomeScreen() {
                                                             )
                                                         )
 
-                                                        // Subtract Achievement progress
                                                         val achievementId = when (quest.category) {
                                                             "coding"   -> AchievementIds.SYSTEM_ARCHITECT
                                                             "mental"   -> AchievementIds.MONARCH_LIBRARY
@@ -585,20 +552,17 @@ fun HomeScreen() {
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Червоний текст попередження
                 Text(
                     text = "УВАГА: Невиконання щоденного квесту призведе до відповідного покарання.",
-                    color = Color(0xFFFF0033), // Яскраво-червоний під Solo Leveling стайл
+                    color = Color(0xFFFF0033),
                     fontSize = 13.sp,
                     textAlign = TextAlign.Start,
                     modifier = Modifier.fillMaxWidth(),
                     lineHeight = 18.sp
-                    // fontFamily = твояFontFamily
                 )
             }
         }
 
-        // Dialog for entering precise quest progress
         questToEditProgress?.let { quest ->
             AlertDialog(
                 onDismissRequest = { questToEditProgress = null },
@@ -648,9 +612,8 @@ fun HomeScreen() {
                             coroutineScope.launch {
                                 val user = userRepository.getUser()
                                 if (user != null) {
-                                    // 1. Нарахування XP за виконання або за перевиконання
                                     val xpGain = calculateXpGain(quest, oldProgress, newProgress, user.currentLevel)
-                                    // 2. Списання XP у разі зменшення прогресу нижче ліміту
+
                                     val xpLoss = if (oldCompleted && !newCompleted) {
                                         calculateXpLoss(quest, user.currentLevel)
                                     } else 0
@@ -659,13 +622,11 @@ fun HomeScreen() {
                                     var newLvl = user.currentLevel
                                     var nextLvlThreshold = user.xpToNextLevel
 
-                                    // Обробка левелапу
                                     while (newXp >= nextLvlThreshold) {
                                         newXp -= nextLvlThreshold
                                         newLvl += 1
                                         nextLvlThreshold = 100 + 10 * newLvl
                                     }
-                                    // Обробка левелдауну (якщо раптом відняли забагато)
                                     while (newXp < 0 && newLvl > 0) {
                                         newLvl -= 1
                                         val prevThreshold = 100 + 10 * newLvl
@@ -682,7 +643,6 @@ fun HomeScreen() {
                                         )
                                     )
 
-                                    // Обробка прогресу досягнень
                                     val achievementId = when (quest.category) {
                                         "coding"   -> AchievementIds.SYSTEM_ARCHITECT
                                         "mental"   -> AchievementIds.MONARCH_LIBRARY

@@ -55,14 +55,13 @@ fun AppNavigation() {
         NavHost(
             navController = navController,
             startDestination = Screen.Home.route,
-            modifier = Modifier.fillMaxSize() // БЕЗ padding(innerPadding)
+            modifier = Modifier.fillMaxSize()
         ) {
             composable(Screen.Stats.route) { StatsScreen() }
             composable(Screen.Home.route) { HomeScreen() }
             composable(Screen.Achievements.route) { AchievementsScreen() }
         }
 
-        // Навбар поверх контенту, притиснутий до низу
         SoloLevelingBottomBar(
             navController = navController,
             modifier = Modifier.align(Alignment.BottomCenter)
@@ -94,7 +93,6 @@ fun SoloLevelingBottomBar(navController: NavController, modifier: Modifier = Mod
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    // Прозорий контейнер, що тримає всю конструкцію навбару
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -104,7 +102,6 @@ fun SoloLevelingBottomBar(navController: NavController, modifier: Modifier = Mod
         ,
         contentAlignment = Alignment.Center
     ) {
-        // 1. Твій епічний неоновий фон із Figma
         Image(
             painter = painterResource(id = R.drawable.navbarframe),
             contentDescription = null,
@@ -117,7 +114,7 @@ fun SoloLevelingBottomBar(navController: NavController, modifier: Modifier = Mod
                         RenderEffect.createBlurEffect(18f, 18f, Shader.TileMode.DECAL)
                             .asComposeRenderEffect()
                     } else null
-                    colorFilter = ColorFilter.tint(Color(0xFF00E6F0)) // <- колір glow
+                    colorFilter = ColorFilter.tint(Color(0xFF00E6F0))
                 },
             contentScale = ContentScale.FillBounds,
             colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(
@@ -126,7 +123,6 @@ fun SoloLevelingBottomBar(navController: NavController, modifier: Modifier = Mod
             )
         )
 
-        // 2. Оригінал поверх (чіткий)
         Image(
             painter = painterResource(id = R.drawable.navbarframe),
             contentDescription = null,
@@ -137,7 +133,6 @@ fun SoloLevelingBottomBar(navController: NavController, modifier: Modifier = Mod
             contentScale = ContentScale.FillBounds
         )
 
-        // 2. Чистий Row без вбудованого Material-лайна. Жодних сірих блоків чи овалів!
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -167,7 +162,6 @@ fun SoloLevelingBottomBar(navController: NavController, modifier: Modifier = Mod
                         ),
                     contentAlignment = Alignment.Center
                 ) {
-                    // Glow-шар
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                         Icon(
                             painter = painterResource(id = screen.iconResId),
@@ -187,7 +181,6 @@ fun SoloLevelingBottomBar(navController: NavController, modifier: Modifier = Mod
                         )
                     }
 
-                    // Чіткий оригінал
                     Icon(
                         painter = painterResource(id = screen.iconResId),
                         contentDescription = screen.route,
